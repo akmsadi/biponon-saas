@@ -10,8 +10,16 @@ export type User = {
     [key: string]: unknown;
 };
 
+export type ActiveOrganization = {
+    id: number;
+    name: string;
+    slug: string;
+    role: string;
+};
+
 export type Auth = {
     user: User;
+    activeOrganizations: ActiveOrganization[];
 };
 
 export type Passkey = {
