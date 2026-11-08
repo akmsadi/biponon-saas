@@ -27,7 +27,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('serial_number_id')->constrained()->restrictOnDelete();
-            $table->foreignId('product_variant_id')->constrained()->restrictOnDelete();
             $table->foreignId('from_warehouse_id')->nullable()->constrained('warehouses')->restrictOnDelete();
             $table->foreignId('to_warehouse_id')->nullable()->constrained('warehouses')->restrictOnDelete();
             $table->string('movement_type', 30);
