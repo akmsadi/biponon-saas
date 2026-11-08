@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { Building2, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -10,13 +10,14 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
-import type { User } from '@/types';
+import type { ActiveOrganization, User } from '@/types';
 
 type Props = {
     user: User;
+    activeOrganizations: ActiveOrganization[];
 };
 
-export function UserMenuContent({ user }: Props) {
+export function UserMenuContent({ user, activeOrganizations }: Props) {
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {
@@ -32,6 +33,23 @@ export function UserMenuContent({ user }: Props) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {activeOrganizations.length > 0 && (
+                <>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        Organizations
+                    </DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                        {activeOrganizations.map((org) => (
+                            <DropdownMenuItem key={org.id}>
+                                <Building2 className="mr-2" />
+                                <span className="truncate">{org.name}</span>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                </>
+            )}
+
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link

@@ -17,17 +17,16 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import type { SidebarNavItem } from '@/types';
 
-
 const mainNavItems: SidebarNavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    {
-        title: 'Organizations',
-        icon: Building2,
-        items: [
-            { title: 'All organizations', href: '/organizations' },
-            { title: 'Suspended', href: '/organizations/suspended' },
-        ],
-    },
+    // {
+    //     title: 'Organizations',
+    //     icon: Building2,
+    //     items: [
+    //         { title: 'All organizations', href: '/organizations' },
+    //         { title: 'Suspended', href: '/organizations/suspended' },
+    //     ],
+    // },
 ];
 
 const footerNavItems: NavItem[] = [

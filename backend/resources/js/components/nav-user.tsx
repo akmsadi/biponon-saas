@@ -49,7 +49,7 @@ export function NavUser() {
                                   : 'bottom'
                         }
                     >
-                        <UserMenuContent user={auth.user} />
+                        <UserMenuContent user={auth.user} activeOrganizations={auth.activeOrganizations} />
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
