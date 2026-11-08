@@ -6,10 +6,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Organization;
-use App\Models\ProductVariant;
-use App\Models\Warehouse;
-use App\Models\StockMovement;
 
 #[Fillable(['organization_id', 'product_variant_id', 'current_warehouse_id', 'serial_number', 'status', 'received_at'])]
 class SerialNumber extends Model

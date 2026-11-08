@@ -55,5 +55,4 @@ class Organization extends Model
     {
         return $this->hasMany(Warehouse::class);
     }
-    
 }

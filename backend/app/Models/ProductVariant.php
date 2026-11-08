@@ -7,12 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use App\Models\Organization;
-use App\Models\Product;
-use App\Models\Size;
-use App\Models\Color;
-use App\Models\SerialNumber;
-use App\Models\StockMovement;
 
 #[Fillable(['organization_id', 'product_id', 'size_id', 'color_id', 'sku', 'barcode', 'price', 'is_active'])]
 class ProductVariant extends Model
