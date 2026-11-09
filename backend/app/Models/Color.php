@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\ColorFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['organization_id', 'name', 'code', 'hex_code', 'sort_order', 'is_active'])]
 class Color extends Model
 {
+    /** @use HasFactory<ColorFactory> */
+    use HasFactory;
+
     protected function casts(): array
     {
         return [
@@ -23,7 +28,7 @@ class Color extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function variants(): HasMany
+    public function productVariants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
     }

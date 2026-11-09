@@ -22,6 +22,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
 import { edit as editProfile } from '@/routes/profile';
 import type { SidebarNavItem } from '@/types';
@@ -44,7 +45,7 @@ const mainNavItems: SidebarNavItem[] = [
         items: [
             // { title: 'Products', href: '/catalog/products' },
             { title: 'Sizes', href: sizesIndex() },
-            // { title: 'Colors', href: '/catalog/colors' },
+            { title: 'Colors', href: colorsIndex() },
         ],
     },
     // { title: 'Warehouses', href: '/warehouses', icon: Warehouse },

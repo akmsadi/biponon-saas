@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Catalog;
 
+use App\Concerns\ScopesToOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\SizeRequest;
-use App\Models\Organization;
 use App\Models\Size;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +13,8 @@ use Inertia\Response;
 
 class SizeController extends Controller
 {
+    use ScopesToOrganization;
+
     /**
      * List the current organization's sizes.
      */
@@ -81,15 +83,5 @@ class SizeController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Size deleted.')]);
 
         return back();
-    }
-
-    private function organization(Request $request): Organization
-    {
-        return $request->attributes->get('organization');
-    }
-
-    private function ensureBelongsToOrganization(Request $request, Size $size): void
-    {
-        abort_unless($size->organization_id === $this->organization($request)->id, 404);
     }
 }
