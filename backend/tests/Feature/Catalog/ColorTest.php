@@ -4,6 +4,8 @@ namespace Tests\Feature\Catalog;
 
 use App\Models\Color;
 use App\Models\Organization;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -126,5 +128,19 @@ class ColorTest extends TestCase
             ->assertRedirect();
 
         $this->assertModelMissing($color);
+    }
+
+    public function test_a_color_used_by_product_variants_cannot_be_deleted(): void
+    {
+        $color = Color::factory()->for($this->organization)->create();
+        ProductVariant::factory()
+            ->for(Product::factory()->for($this->organization))
+            ->create(['color_id' => $color->id]);
+
+        $this->actingAs($this->user)
+            ->delete(route('catalog.colors.destroy', $color))
+            ->assertRedirect();
+
+        $this->assertModelExists($color);
     }
 }

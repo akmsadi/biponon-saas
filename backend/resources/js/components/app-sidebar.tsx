@@ -6,7 +6,7 @@ import {
     Settings,
     Tags,
     // Users,
-    // Warehouse,
+    Warehouse,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -25,6 +25,7 @@ import { dashboard } from '@/routes';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
 import { edit as editProfile } from '@/routes/profile';
+import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
 
 // Unbuilt pages are commented out to avoid dead links; uncomment each as its route lands.
@@ -48,7 +49,7 @@ const mainNavItems: SidebarNavItem[] = [
             { title: 'Colors', href: colorsIndex() },
         ],
     },
-    // { title: 'Warehouses', href: '/warehouses', icon: Warehouse },
+    { title: 'Warehouses', href: warehousesIndex(), icon: Warehouse },
     // {
     //     title: 'Operations',
     //     icon: ArrowLeftRight,
