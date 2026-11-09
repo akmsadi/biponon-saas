@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
-use Laravel\Fortify\Features;
 use Inertia\Middleware;
+use Laravel\Fortify\Features;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,21 +37,21 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $user,
-                'activeOrganizations' => $user?->activeOrganizations()
-                    ->orderBy('organizations.name')
-                    ->get(['organizations.id', 'organizations.name', 'organizations.slug'])
-                    ->map(fn($org) => [
-                        'id' => $org->id,
-                        'name' => $org->name,
-                        'slug' => $org->slug,
-                        'role'=> $org->pivot->role,
-                    ]),
+                'activeOrganizations' => fn () => $user?->activeOrganizations->map(fn ($org) => [
+                    'id' => $org->id,
+                    'name' => $org->name,
+                    'slug' => $org->slug,
+                    'role' => $org->pivot->role,
+                ]) ?? [],
+                'currentOrganizationId' => fn () => $request->session()->get('current_organization_id'),
             ],
+
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'canRegister' => Features::enabled(Features::registration()),
         ];

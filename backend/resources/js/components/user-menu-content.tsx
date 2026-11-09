@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { Building2, LogOut, Settings } from 'lucide-react';
+import { Building2, LogOut, Settings, Check } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -11,13 +11,15 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { ActiveOrganization, User } from '@/types';
+import { update as updateCurrentOrganization } from '@/routes/current-organization';
 
 type Props = {
     user: User;
     activeOrganizations: ActiveOrganization[];
+    currentOrganizationId: number | null;
 };
 
-export function UserMenuContent({ user, activeOrganizations }: Props) {
+export function UserMenuContent({ user, activeOrganizations, currentOrganizationId }: Props) {
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {
@@ -40,10 +42,15 @@ export function UserMenuContent({ user, activeOrganizations }: Props) {
                     </DropdownMenuLabel>
                     <DropdownMenuGroup>
                         {activeOrganizations.map((org) => (
-                            <DropdownMenuItem key={org.id}>
+                            <DropdownMenuItem
+                                key={org.id}
+                                onSelect={() => router.put(updateCurrentOrganization(), { organization_id: org.id })}
+                            >
                                 <Building2 className="mr-2" />
                                 <span className="truncate">{org.name}</span>
+                                {org.id === currentOrganizationId && <Check className="ml-auto" />}
                             </DropdownMenuItem>
+
                         ))}
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />

@@ -62,7 +62,10 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     public function activeOrganizations(): BelongsToMany
     {
-        return $this->organizations()->wherePivot('status', 'active')->where('organizations.status', 'active');
+        return $this->organizations()
+            ->wherePivot('status', 'active')
+            ->where('organizations.status', 'active')
+            ->orderBy('organizations.name');
     }
 
     public function stockMovements(): HasMany

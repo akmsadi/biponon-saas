@@ -20,6 +20,7 @@ export type ActiveOrganization = {
 export type Auth = {
     user: User;
     activeOrganizations: ActiveOrganization[];
+    currentOrganizationId: number | null;
 };
 
 export type Passkey = {
