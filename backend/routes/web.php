@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Catalog\SizeController;
 use App\Http\Controllers\CurrentOrganizationController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Everything that shows organization data goes in here
     Route::middleware('organization')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::prefix('catalog')->name('catalog.')->group(function () {
+            Route::resource('sizes', SizeController::class)->only(['index', 'store', 'update', 'destroy']);
+        });
 
         Route::prefix('inventory')->name('inventory.')->group(function () {
             // Route::get('stock', ...)->name('stock');

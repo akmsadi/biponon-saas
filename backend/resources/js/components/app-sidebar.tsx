@@ -4,7 +4,7 @@ import {
     // Boxes,
     LayoutGrid,
     Settings,
-    // Tags,
+    Tags,
     // Users,
     // Warehouse,
 } from 'lucide-react';
@@ -22,6 +22,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as sizesIndex } from '@/routes/catalog/sizes';
 import { edit as editProfile } from '@/routes/profile';
 import type { SidebarNavItem } from '@/types';
 
@@ -37,15 +38,15 @@ const mainNavItems: SidebarNavItem[] = [
     //         { title: 'Stock movements', href: '/inventory/movements' },
     //     ],
     // },
-    // {
-    //     title: 'Catalog',
-    //     icon: Tags,
-    //     items: [
-    //         { title: 'Products', href: '/catalog/products' },
-    //         { title: 'Sizes', href: '/catalog/sizes' },
-    //         { title: 'Colors', href: '/catalog/colors' },
-    //     ],
-    // },
+    {
+        title: 'Catalog',
+        icon: Tags,
+        items: [
+            // { title: 'Products', href: '/catalog/products' },
+            { title: 'Sizes', href: sizesIndex() },
+            // { title: 'Colors', href: '/catalog/colors' },
+        ],
+    },
     // { title: 'Warehouses', href: '/warehouses', icon: Warehouse },
     // {
     //     title: 'Operations',
