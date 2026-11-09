@@ -1,5 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    // ArrowLeftRight,
+    // Boxes,
+    LayoutGrid,
+    Settings,
+    // Tags,
+    // Users,
+    // Warehouse,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,28 +22,49 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import { edit as editProfile } from '@/routes/profile';
 import type { SidebarNavItem } from '@/types';
 
+// Unbuilt pages are commented out to avoid dead links; uncomment each as its route lands.
 const mainNavItems: SidebarNavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
     // {
-    //     title: 'Organizations',
-    //     icon: Building2,
+    //     title: 'Inventory',
+    //     icon: Boxes,
     //     items: [
-    //         { title: 'All organizations', href: '/organizations' },
-    //         { title: 'Suspended', href: '/organizations/suspended' },
+    //         { title: 'Stock overview', href: '/inventory/stock' },
+    //         { title: 'Serial numbers', href: '/inventory/serials' },
+    //         { title: 'Stock movements', href: '/inventory/movements' },
     //     ],
     // },
+    // {
+    //     title: 'Catalog',
+    //     icon: Tags,
+    //     items: [
+    //         { title: 'Products', href: '/catalog/products' },
+    //         { title: 'Sizes', href: '/catalog/sizes' },
+    //         { title: 'Colors', href: '/catalog/colors' },
+    //     ],
+    // },
+    // { title: 'Warehouses', href: '/warehouses', icon: Warehouse },
+    // {
+    //     title: 'Operations',
+    //     icon: ArrowLeftRight,
+    //     items: [
+    //         { title: 'Receive stock', href: '/operations/receive' },
+    //         { title: 'Transfer stock', href: '/operations/transfer' },
+    //         { title: 'Dispatch / returns', href: '/operations/dispatch' },
+    //     ],
+    // },
+    // {
+    //     title: 'Organization',
+    //     icon: Users,
+    //     items: [{ title: 'Members', href: '/organization/members' }],
+    // },
+    { title: 'Settings', href: editProfile(), icon: Settings },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
     return (
@@ -57,9 +86,12 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {footerNavItems.length > 0 && (
+                    <NavFooter items={footerNavItems} className="mt-auto" />
+                )}
                 <NavUser />
             </SidebarFooter>
+
         </Sidebar>
     );
 }
