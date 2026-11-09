@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -44,6 +45,20 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Attach the user to an organization as an active member.
+     */
+    public function withOrganization(?Organization $organization = null, string $role = 'admin'): static
+    {
+        return $this->afterCreating(function (User $user) use ($organization, $role) {
+            $user->organizations()->attach($organization ?? Organization::factory()->create(), [
+                'role' => $role,
+                'status' => 'active',
+                'joined_at' => now(),
+            ]);
+        });
     }
 
     /**
