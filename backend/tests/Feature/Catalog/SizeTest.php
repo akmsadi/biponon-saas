@@ -3,6 +3,8 @@
 namespace Tests\Feature\Catalog;
 
 use App\Models\Organization;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Size;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,5 +126,19 @@ class SizeTest extends TestCase
             ->assertRedirect();
 
         $this->assertModelMissing($size);
+    }
+
+    public function test_a_size_used_by_product_variants_cannot_be_deleted(): void
+    {
+        $size = Size::factory()->for($this->organization)->create();
+        ProductVariant::factory()
+            ->for(Product::factory()->for($this->organization))
+            ->create(['size_id' => $size->id]);
+
+        $this->actingAs($this->user)
+            ->delete(route('catalog.sizes.destroy', $size))
+            ->assertRedirect();
+
+        $this->assertModelExists($size);
     }
 }

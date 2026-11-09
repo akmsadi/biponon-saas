@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\SerialNumberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['organization_id', 'product_variant_id', 'current_warehouse_id', 'serial_number', 'status', 'received_at'])]
 class SerialNumber extends Model
 {
+    /** @use HasFactory<SerialNumberFactory> */
+    use HasFactory;
+
     protected function casts(): array
     {
         return [
