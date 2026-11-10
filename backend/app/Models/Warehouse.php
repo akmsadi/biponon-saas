@@ -27,6 +27,22 @@ class Warehouse extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function stockBalances(): HasMany
+    {
+        return $this->hasMany(StockBalance::class);
+    }
+
+    /**
+     * Whether this warehouse has ever held stock or appeared in a movement.
+     */
+    public function hasStockHistory(): bool
+    {
+        return $this->stockBalances()->exists()
+            || $this->fromStockMovements()->exists()
+            || $this->toStockMovements()->exists()
+            || $this->serialNumbers()->exists();
+    }
+
     public function serialNumbers(): HasMany
     {
         return $this->hasMany(SerialNumber::class, 'current_warehouse_id');

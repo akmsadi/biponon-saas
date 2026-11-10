@@ -69,7 +69,7 @@ class ProductVariantController extends Controller
     {
         $this->ensureBelongsToOrganization($request, $variant);
 
-        if ($variant->serialNumbers()->exists()) {
+        if ($variant->hasStockHistory()) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This variant has stock history. Deactivate it instead.')]);
 
             return back();

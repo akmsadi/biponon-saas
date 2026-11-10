@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Optional per-unit tracking on top of quantity stock: one physical unit with its own code.
+ */
 #[Fillable(['organization_id', 'product_variant_id', 'current_warehouse_id', 'serial_number', 'status', 'received_at'])]
 class SerialNumber extends Model
 {
@@ -37,8 +40,11 @@ class SerialNumber extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function stockMovements(): HasMany
+    /**
+     * The movements this unit took part in, i.e. its own history.
+     */
+    public function stockMovements(): BelongsToMany
     {
-        return $this->hasMany(StockMovement::class);
+        return $this->belongsToMany(StockMovement::class);
     }
 }

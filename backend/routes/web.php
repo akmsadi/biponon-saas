@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::put('current-organization', [CurrentOrganizationController::class, 'update'])
-        ->name('current-organization.update');
+    Route::put('current-organization', [CurrentOrganizationController::class, 'update'])->name('current-organization.update');
 
     // Everything that shows organization data goes in here
     Route::middleware('organization')->group(function () {

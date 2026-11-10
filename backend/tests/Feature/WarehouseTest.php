@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
-use App\Models\SerialNumber;
+use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -35,7 +35,7 @@ class WarehouseTest extends TestCase
     public function test_index_lists_only_the_current_organizations_warehouses_with_in_stock_counts(): void
     {
         $warehouse = Warehouse::factory()->for($this->organization)->create(['name' => 'Dhaka Main']);
-        SerialNumber::factory()->count(2)->for($this->organization)->create(['current_warehouse_id' => $warehouse->id]);
+        StockBalance::factory()->count(2)->create(['warehouse_id' => $warehouse->id, 'quantity' => 7]);
         Warehouse::factory()->create(['name' => 'Other org warehouse']);
 
         $this->actingAs($this->user)
@@ -45,7 +45,7 @@ class WarehouseTest extends TestCase
                 ->component('warehouses/index')
                 ->has('warehouses', 1)
                 ->where('warehouses.0.name', 'Dhaka Main')
-                ->where('warehouses.0.in_stock_count', 2));
+                ->where('warehouses.0.in_stock_count', 14));
     }
 
     public function test_a_warehouse_can_be_created_with_normalized_codes(): void
@@ -93,7 +93,7 @@ class WarehouseTest extends TestCase
     public function test_a_warehouse_holding_stock_can_be_deactivated(): void
     {
         $warehouse = Warehouse::factory()->for($this->organization)->create();
-        SerialNumber::factory()->for($this->organization)->create(['current_warehouse_id' => $warehouse->id]);
+        StockBalance::factory()->create(['warehouse_id' => $warehouse->id]);
 
         $this->actingAs($this->user)
             ->put(route('warehouses.update', $warehouse), [
@@ -135,7 +135,7 @@ class WarehouseTest extends TestCase
     public function test_a_warehouse_holding_stock_cannot_be_deleted(): void
     {
         $warehouse = Warehouse::factory()->for($this->organization)->create();
-        SerialNumber::factory()->for($this->organization)->create(['current_warehouse_id' => $warehouse->id]);
+        StockBalance::factory()->create(['warehouse_id' => $warehouse->id]);
 
         $this->actingAs($this->user)
             ->delete(route('warehouses.destroy', $warehouse))
@@ -147,9 +147,7 @@ class WarehouseTest extends TestCase
     public function test_a_warehouse_with_only_movement_history_cannot_be_deleted(): void
     {
         $warehouse = Warehouse::factory()->for($this->organization)->create();
-        $dispatchedSerial = SerialNumber::factory()->dispatched()->for($this->organization)->create();
         StockMovement::factory()->create([
-            'serial_number_id' => $dispatchedSerial->id,
             'from_warehouse_id' => $warehouse->id,
             'to_warehouse_id' => null,
             'movement_type' => 'dispatch',

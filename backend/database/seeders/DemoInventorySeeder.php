@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SerialNumber;
 use App\Models\Size;
+use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Seeds demo catalog, warehouse and serialized stock data for local development.
+ * Seeds demo catalog, warehouse and stock data (quantities, with a few serialized units) for local development.
  *
  * Organizations that already have products are skipped, so the seeder is safe to re-run.
  */
@@ -61,6 +62,13 @@ class DemoInventorySeeder extends Seeder
         ['name' => 'Oxford Button-Down Shirt', 'code' => 'OXF', 'description' => 'Long sleeve oxford cotton shirt.', 'price' => 1290],
         ['name' => 'Track Joggers', 'code' => 'JOG', 'description' => 'Tapered joggers with elastic cuffs.', 'price' => 990],
     ];
+
+    /**
+     * Products whose units are received with individual serial numbers, to demo optional serial tracking.
+     *
+     * @var list<string>
+     */
+    private const SERIALIZED_PRODUCTS = ['Embroidered Panjabi'];
 
     /**
      * @var list<array{name: string, code: string, address_line: string, city: string}>
@@ -130,14 +138,15 @@ class DemoInventorySeeder extends Seeder
             $warehouses = $this->seedWarehouses($organization);
             $variants = $this->seedProducts($organization, $sizes, $colors, $productCount);
 
-            $this->seedSerialsAndMovements($organization, $variants, $warehouses, $performer);
+            $this->seedStockAndMovements($organization, $variants, $warehouses, $performer);
         });
 
         $this->command?->info(sprintf(
-            '%s: %d products, %d variants, %d serials, %d movements.',
+            '%s: %d products, %d variants, %d units in stock, %d serials, %d movements.',
             $organization->name,
             $organization->products()->count(),
             $organization->productVariants()->count(),
+            $organization->stockBalances()->sum('quantity'),
             $organization->serialNumbers()->count(),
             $organization->stockMovements()->count(),
         ));
@@ -226,74 +235,87 @@ class DemoInventorySeeder extends Seeder
     }
 
     /**
-     * Gives each variant a few serial units with a realistic movement history:
-     * every unit is received, some are transferred, some dispatched, and some dispatched units come back as returns.
+     * Gives each variant a realistic quantity history: an opening receipt, then sometimes a transfer,
+     * a dispatch and a partial return. Variants of serialized products are received with one serial per unit.
      *
      * @param  Collection<int, ProductVariant>  $variants
      * @param  Collection<int, Warehouse>  $warehouses
      */
-    private function seedSerialsAndMovements(Organization $organization, Collection $variants, Collection $warehouses, User $performer): void
+    private function seedStockAndMovements(Organization $organization, Collection $variants, Collection $warehouses, User $performer): void
     {
         $serialSequence = 0;
 
         foreach ($variants as $variant) {
-            $unitCount = mt_rand(2, 8);
+            /** @var array<int, int> $quantities on-hand quantity keyed by warehouse id */
+            $quantities = [];
+            $occurredAt = now()->subDays(mt_rand(20, 90))->setTime(mt_rand(9, 18), mt_rand(0, 59));
 
-            for ($unit = 0; $unit < $unitCount; $unit++) {
-                $occurredAt = now()->subDays(mt_rand(20, 90))->setTime(mt_rand(9, 18), mt_rand(0, 59));
-                $warehouse = $warehouses->random();
+            $move = function (string $type, ?Warehouse $from, ?Warehouse $to, int $quantity, ?string $notes = null) use ($organization, $variant, $performer, &$occurredAt, &$quantities): StockMovement {
+                if ($from) {
+                    $quantities[$from->id] -= $quantity;
+                }
 
-                $serial = SerialNumber::create([
+                if ($to) {
+                    $quantities[$to->id] = ($quantities[$to->id] ?? 0) + $quantity;
+                }
+
+                return StockMovement::create([
                     'organization_id' => $organization->id,
                     'product_variant_id' => $variant->id,
-                    'current_warehouse_id' => $warehouse->id,
-                    'serial_number' => sprintf('%s-%06d', $variant->sku, ++$serialSequence),
-                    'status' => 'in_stock',
-                    'received_at' => $occurredAt,
+                    'from_warehouse_id' => $from?->id,
+                    'to_warehouse_id' => $to?->id,
+                    'quantity' => $quantity,
+                    'movement_type' => $type,
+                    'performed_by' => $performer->id,
+                    'notes' => $notes,
+                    'occurred_at' => $occurredAt,
                 ]);
+            };
 
-                $move = function (string $type, ?Warehouse $from, ?Warehouse $to, ?string $notes = null) use ($organization, $serial, $performer, &$occurredAt): void {
-                    StockMovement::create([
+            $warehouse = $warehouses->random();
+
+            if (in_array($variant->product->name, self::SERIALIZED_PRODUCTS, true)) {
+                $quantity = mt_rand(2, 5);
+                $receipt = $move('receive', null, $warehouse, $quantity, 'Opening stock (serialized)');
+
+                for ($unit = 0; $unit < $quantity; $unit++) {
+                    $receipt->serialNumbers()->attach(SerialNumber::create([
                         'organization_id' => $organization->id,
-                        'serial_number_id' => $serial->id,
-                        'from_warehouse_id' => $from?->id,
-                        'to_warehouse_id' => $to?->id,
-                        'movement_type' => $type,
-                        'performed_by' => $performer->id,
-                        'notes' => $notes,
-                        'occurred_at' => $occurredAt,
-                    ]);
-                };
-
-                $move('receive', null, $warehouse, 'Opening stock');
+                        'product_variant_id' => $variant->id,
+                        'current_warehouse_id' => $warehouse->id,
+                        'serial_number' => sprintf('%s-%06d', $variant->sku, ++$serialSequence),
+                        'status' => 'in_stock',
+                        'received_at' => $occurredAt,
+                    ]));
+                }
+            } else {
+                $move('receive', null, $warehouse, mt_rand(10, 60), 'Opening stock');
 
                 if (mt_rand(1, 100) <= 30) {
                     $occurredAt = $this->later($occurredAt);
                     $destination = $warehouses->reject(fn (Warehouse $candidate): bool => $candidate->is($warehouse))->random();
-                    $move('transfer', $warehouse, $destination);
-                    $warehouse = $destination;
+                    $move('transfer', $warehouse, $destination, mt_rand(1, intdiv($quantities[$warehouse->id], 2)));
                 }
 
-                if (mt_rand(1, 100) <= 25) {
+                if (mt_rand(1, 100) <= 40) {
                     $occurredAt = $this->later($occurredAt);
-                    $move('dispatch', $warehouse, null, 'Customer order');
-                    $currentWarehouse = null;
+                    $dispatched = mt_rand(1, intdiv($quantities[$warehouse->id], 2));
+                    $move('dispatch', $warehouse, null, $dispatched, 'Customer order');
 
                     if (mt_rand(1, 100) <= 25) {
                         $occurredAt = $this->later($occurredAt);
-                        $move('return', null, $warehouse, 'Customer return');
-                        $currentWarehouse = $warehouse;
+                        $move('return', null, $warehouse, mt_rand(1, $dispatched), 'Customer return');
                     }
-
-                    $serial->update([
-                        'current_warehouse_id' => $currentWarehouse?->id,
-                        'status' => $currentWarehouse ? 'in_stock' : 'dispatched',
-                    ]);
-
-                    continue;
                 }
+            }
 
-                $serial->update(['current_warehouse_id' => $warehouse->id]);
+            foreach ($quantities as $warehouseId => $quantity) {
+                StockBalance::create([
+                    'organization_id' => $organization->id,
+                    'product_variant_id' => $variant->id,
+                    'warehouse_id' => $warehouseId,
+                    'quantity' => $quantity,
+                ]);
             }
         }
     }
