@@ -53,7 +53,6 @@ type Variant = {
     barcode: string | null;
     price: string | null;
     is_active: boolean;
-    serial_numbers_count: number;
     in_stock_count: number;
     size: Size & { is_active: boolean };
     color: Color & { is_active: boolean };

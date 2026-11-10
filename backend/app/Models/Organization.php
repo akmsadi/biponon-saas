@@ -51,6 +51,11 @@ class Organization extends Model
         return $this->hasMany(SerialNumber::class);
     }
 
+    public function stockBalances(): HasMany
+    {
+        return $this->hasMany(StockBalance::class);
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);

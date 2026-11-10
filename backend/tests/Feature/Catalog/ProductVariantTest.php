@@ -6,8 +6,8 @@ use App\Models\Color;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\SerialNumber;
 use App\Models\Size;
+use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -171,7 +171,7 @@ class ProductVariantTest extends TestCase
     public function test_a_variant_with_stock_history_cannot_be_deleted(): void
     {
         $variant = ProductVariant::factory()->for($this->product)->create();
-        SerialNumber::factory()->dispatched()->for($variant)->create();
+        StockMovement::factory()->for($variant)->create();
 
         $this->actingAs($this->user)->delete(route('catalog.variants.destroy', $variant))->assertRedirect();
 

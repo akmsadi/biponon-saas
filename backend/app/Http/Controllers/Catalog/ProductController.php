@@ -6,7 +6,7 @@ use App\Concerns\ScopesToOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\ProductRequest;
 use App\Models\Product;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,16 +18,19 @@ class ProductController extends Controller
     use ScopesToOrganization;
 
     /**
-     * List the current organization's products with variant and in-stock unit counts.
+     * List the current organization's products with their variant count and total quantity in stock.
      */
     public function index(Request $request): Response
     {
         $products = $this->organization($request)->products()
             ->withCount('productVariants')
-            ->withCount(['serialNumbers as in_stock_count' => fn (Builder $query) => $query->where('status', 'in_stock')])
+            ->withSum('stockBalances as in_stock_count', 'quantity')
             ->orderByDesc('is_active')
             ->orderBy('name')
-            ->get(['id', 'name', 'description', 'is_active']);
+            ->get(['id', 'name', 'description', 'is_active'])
+            ->each(function (Product $product): void {
+                $product->in_stock_count = (int) $product->in_stock_count;
+            });
 
         return Inertia::render('catalog/products/index', [
             'products' => $products,
@@ -58,11 +61,11 @@ class ProductController extends Controller
 
         $variants = $product->productVariants()
             ->with(['size:id,name,code,sort_order,is_active', 'color:id,name,code,hex_code,sort_order,is_active'])
-            ->withCount([
-                'serialNumbers',
-                'serialNumbers as in_stock_count' => fn (Builder $query) => $query->where('status', 'in_stock'),
-            ])
+            ->withSum('stockBalances as in_stock_count', 'quantity')
             ->get(['id', 'product_id', 'size_id', 'color_id', 'sku', 'barcode', 'price', 'is_active'])
+            ->each(function (ProductVariant $variant): void {
+                $variant->in_stock_count = (int) $variant->in_stock_count;
+            })
             ->sortBy([
                 ['size.sort_order', 'asc'],
                 ['size.name', 'asc'],
@@ -113,7 +116,7 @@ class ProductController extends Controller
     {
         $this->ensureBelongsToOrganization($request, $product);
 
-        if ($product->serialNumbers()->exists()) {
+        if ($product->hasStockHistory()) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This product has stock history. Deactivate it instead.')]);
 
             return back();

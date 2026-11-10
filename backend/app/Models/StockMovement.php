@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['organization_id', 'serial_number_id', 'from_warehouse_id', 'to_warehouse_id', 'movement_type', 'reference_type', 'reference_id', 'performed_by', 'notes', 'occurred_at'])]
+/**
+ * One append-only ledger entry: a quantity of a variant moving into, out of, or between warehouses.
+ */
+#[Fillable(['organization_id', 'product_variant_id', 'from_warehouse_id', 'to_warehouse_id', 'quantity', 'movement_type', 'reference_type', 'reference_id', 'performed_by', 'notes', 'occurred_at'])]
 class StockMovement extends Model
 {
     /** @use HasFactory<StockMovementFactory> */
@@ -17,6 +21,7 @@ class StockMovement extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'integer',
             'occurred_at' => 'datetime',
         ];
     }
@@ -26,9 +31,17 @@ class StockMovement extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function serialNumber(): BelongsTo
+    public function productVariant(): BelongsTo
     {
-        return $this->belongsTo(SerialNumber::class);
+        return $this->belongsTo(ProductVariant::class);
+    }
+
+    /**
+     * The serialized units that took part in this movement, if any were tracked.
+     */
+    public function serialNumbers(): BelongsToMany
+    {
+        return $this->belongsToMany(SerialNumber::class);
     }
 
     public function fromWarehouse(): BelongsTo

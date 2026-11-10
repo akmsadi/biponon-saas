@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Concerns\ScopesToOrganization;
 use App\Http\Requests\WarehouseRequest;
 use App\Models\Warehouse;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,15 +15,18 @@ class WarehouseController extends Controller
     use ScopesToOrganization;
 
     /**
-     * List the current organization's warehouses with their in-stock unit counts.
+     * List the current organization's warehouses with the total quantity they hold.
      */
     public function index(Request $request): Response
     {
         $warehouses = $this->organization($request)->warehouses()
-            ->withCount(['serialNumbers as in_stock_count' => fn (Builder $query) => $query->where('status', 'in_stock')])
+            ->withSum('stockBalances as in_stock_count', 'quantity')
             ->orderByDesc('is_active')
             ->orderBy('name')
-            ->get(['id', 'name', 'code', 'address_line', 'city', 'country_code', 'is_active']);
+            ->get(['id', 'name', 'code', 'address_line', 'city', 'country_code', 'is_active'])
+            ->each(function (Warehouse $warehouse): void {
+                $warehouse->in_stock_count = (int) $warehouse->in_stock_count;
+            });
 
         return Inertia::render('warehouses/index', [
             'warehouses' => $warehouses,
@@ -70,7 +72,7 @@ class WarehouseController extends Controller
     {
         $this->ensureBelongsToOrganization($request, $warehouse);
 
-        if ($this->hasStockHistory($warehouse)) {
+        if ($warehouse->hasStockHistory()) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This warehouse has stock or movement history. Deactivate it instead.')]);
 
             return back();
@@ -81,12 +83,5 @@ class WarehouseController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Warehouse deleted.')]);
 
         return back();
-    }
-
-    private function hasStockHistory(Warehouse $warehouse): bool
-    {
-        return $warehouse->serialNumbers()->exists()
-            || $warehouse->fromStockMovements()->exists()
-            || $warehouse->toStockMovements()->exists();
     }
 }

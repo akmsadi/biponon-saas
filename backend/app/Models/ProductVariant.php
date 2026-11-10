@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['organization_id', 'product_id', 'size_id', 'color_id', 'sku', 'barcode', 'price', 'is_active'])]
 class ProductVariant extends Model
@@ -49,8 +48,23 @@ class ProductVariant extends Model
         return $this->hasMany(SerialNumber::class);
     }
 
-    public function stockMovements(): HasManyThrough
+    public function stockBalances(): HasMany
     {
-        return $this->hasManyThrough(StockMovement::class, SerialNumber::class);
+        return $this->hasMany(StockBalance::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Whether stock of this variant has ever been recorded anywhere.
+     */
+    public function hasStockHistory(): bool
+    {
+        return $this->stockMovements()->exists()
+            || $this->stockBalances()->exists()
+            || $this->serialNumbers()->exists();
     }
 }

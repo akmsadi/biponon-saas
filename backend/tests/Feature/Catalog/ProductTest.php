@@ -6,8 +6,9 @@ use App\Models\Color;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\SerialNumber;
 use App\Models\Size;
+use App\Models\StockBalance;
+use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -39,8 +40,8 @@ class ProductTest extends TestCase
         $product = Product::factory()->for($this->organization)->create(['name' => 'Classic Tee']);
         $variant = ProductVariant::factory()->for($product)->create();
         ProductVariant::factory()->for($product)->create();
-        SerialNumber::factory()->for($variant)->create();
-        SerialNumber::factory()->dispatched()->for($variant)->create();
+        StockBalance::factory()->for($variant)->create(['quantity' => 5]);
+        StockBalance::factory()->for($variant)->create(['quantity' => 3]);
         Product::factory()->create(['name' => 'Other org product']);
 
         $this->actingAs($this->user)
@@ -51,7 +52,7 @@ class ProductTest extends TestCase
                 ->has('products', 1)
                 ->where('products.0.name', 'Classic Tee')
                 ->where('products.0.product_variants_count', 2)
-                ->where('products.0.in_stock_count', 1));
+                ->where('products.0.in_stock_count', 8));
     }
 
     public function test_creating_a_product_redirects_to_its_page(): void
@@ -131,7 +132,7 @@ class ProductTest extends TestCase
     {
         $product = Product::factory()->for($this->organization)->create();
         $variant = ProductVariant::factory()->for($product)->create();
-        SerialNumber::factory()->dispatched()->for($variant)->create();
+        StockMovement::factory()->for($variant)->create();
 
         $this->actingAs($this->user)
             ->delete(route('catalog.products.destroy', $product))
