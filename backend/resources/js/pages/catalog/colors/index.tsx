@@ -2,6 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ColorController from '@/actions/App/Http/Controllers/Catalog/ColorController';
+import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
@@ -30,21 +31,6 @@ type Color = {
 };
 
 const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
-
-function Swatch({ hex }: { hex: string | null }) {
-    if (!hex) {
-        return (
-            <span className="inline-block size-5 rounded border border-dashed border-muted-foreground/40" />
-        );
-    }
-
-    return (
-        <span
-            className="inline-block size-5 rounded border border-black/10 dark:border-white/20"
-            style={{ backgroundColor: hex }}
-        />
-    );
-}
 
 export default function Colors({ colors }: { colors: Color[] }) {
     // undefined = closed, null = creating, Color = editing
@@ -109,7 +95,7 @@ export default function Colors({ colors }: { colors: Color[] }) {
                                     >
                                         <td className="px-4 py-3 font-medium">
                                             <div className="flex items-center gap-2">
-                                                <Swatch hex={color.hex_code} />
+                                                <ColorSwatch hex={color.hex_code} />
                                                 {color.name}
                                             </div>
                                         </td>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['organization_id', 'name', 'description', 'is_active'])]
 class Product extends Model
@@ -30,5 +31,10 @@ class Product extends Model
     public function productVariants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function serialNumbers(): HasManyThrough
+    {
+        return $this->hasManyThrough(SerialNumber::class, ProductVariant::class);
     }
 }
