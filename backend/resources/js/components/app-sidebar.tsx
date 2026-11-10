@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
-    // ArrowLeftRight,
+    ArrowLeftRight,
     // Boxes,
     LayoutGrid,
     Settings,
@@ -25,6 +25,7 @@ import { dashboard } from '@/routes';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as productsIndex } from '@/routes/catalog/products';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
+import { create as receiveStock } from '@/routes/operations/receive';
 import { edit as editProfile } from '@/routes/profile';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
@@ -51,15 +52,15 @@ const mainNavItems: SidebarNavItem[] = [
         ],
     },
     { title: 'Warehouses', href: warehousesIndex(), icon: Warehouse },
-    // {
-    //     title: 'Operations',
-    //     icon: ArrowLeftRight,
-    //     items: [
-    //         { title: 'Receive stock', href: '/operations/receive' },
-    //         { title: 'Transfer stock', href: '/operations/transfer' },
-    //         { title: 'Dispatch / returns', href: '/operations/dispatch' },
-    //     ],
-    // },
+    {
+        title: 'Operations',
+        icon: ArrowLeftRight,
+        items: [
+            { title: 'Receive stock', href: receiveStock() },
+            // { title: 'Transfer stock', href: '/operations/transfer' },
+            // { title: 'Dispatch / returns', href: '/operations/dispatch' },
+        ],
+    },
     // {
     //     title: 'Organization',
     //     icon: Users,
@@ -95,7 +96,6 @@ export function AppSidebar() {
                 )}
                 <NavUser />
             </SidebarFooter>
-
         </Sidebar>
     );
 }
