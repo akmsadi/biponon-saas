@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Catalog\ColorController;
+use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductVariantController;
 use App\Http\Controllers\Catalog\SizeController;
 use App\Http\Controllers\CurrentOrganizationController;
 use App\Http\Controllers\DashboardController;
@@ -20,6 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('catalog')->name('catalog.')->group(function () {
             Route::resource('sizes', SizeController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::resource('colors', ColorController::class)->only(['index', 'store', 'update', 'destroy']);
+            Route::resource('products', ProductController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+            Route::resource('products.variants', ProductVariantController::class)->only(['store', 'update', 'destroy'])->shallow();
         });
 
         Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy']);
