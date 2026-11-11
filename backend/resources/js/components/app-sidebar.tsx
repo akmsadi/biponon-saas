@@ -25,6 +25,7 @@ import { dashboard } from '@/routes';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as productsIndex } from '@/routes/catalog/products';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
+import { index as movementsIndex } from '@/routes/inventory/movements';
 import { index as serialsIndex } from '@/routes/inventory/serials';
 import { index as stockIndex } from '@/routes/inventory/stock';
 import { create as receiveStock } from '@/routes/operations/receive';
@@ -41,7 +42,7 @@ const mainNavItems: SidebarNavItem[] = [
         items: [
             { title: 'Stock overview', href: stockIndex() },
             { title: 'Serial numbers', href: serialsIndex() },
-            // { title: 'Stock movements', href: '/inventory/movements' },
+            { title: 'Stock movements', href: movementsIndex() },
         ],
     },
     {

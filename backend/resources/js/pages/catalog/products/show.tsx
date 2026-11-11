@@ -1,5 +1,5 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
+import { History, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
 import ProductVariantController from '@/actions/App/Http/Controllers/Catalog/ProductVariantController';
@@ -28,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { index, show } from '@/routes/catalog/products';
+import { index as movementsIndex } from '@/routes/inventory/movements';
 
 type Product = {
     id: number;
@@ -128,12 +129,23 @@ export default function ShowProduct({
                             </Badge>
                         )}
                     </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => setDeletingProduct(true)}
-                    >
-                        <Trash2 /> Delete product
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" asChild>
+                            <Link
+                                href={movementsIndex({
+                                    query: { product: product.id },
+                                })}
+                            >
+                                <History /> View movements
+                            </Link>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeletingProduct(true)}
+                        >
+                            <Trash2 /> Delete product
+                        </Button>
+                    </div>
                 </div>
 
                 <Card className="max-w-2xl">
