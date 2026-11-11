@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { PackagePlus, Search } from 'lucide-react';
+import { ArrowLeftRight, PackagePlus, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
@@ -26,6 +26,7 @@ import {
 import { show as showProduct } from '@/routes/catalog/products';
 import { index } from '@/routes/inventory/stock';
 import { create as receiveStock } from '@/routes/operations/receive';
+import { create as transferStock } from '@/routes/operations/transfer';
 
 type Balance = {
     id: number;
@@ -121,11 +122,18 @@ export default function StockOverview({
                         title="Stock overview"
                         description="On-hand quantity of every variant in every warehouse"
                     />
-                    <Button asChild>
-                        <Link href={receiveStock()}>
-                            <PackagePlus /> Receive stock
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap justify-end gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href={transferStock()}>
+                                <ArrowLeftRight /> Transfer stock
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={receiveStock()}>
+                                <PackagePlus /> Receive stock
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -10,6 +10,7 @@ use App\Http\Controllers\Inventory\SerialNumberController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Inventory\StockOverviewController;
 use App\Http\Controllers\Operations\ReceiveStockController;
+use App\Http\Controllers\Operations\TransferStockController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('operations')->name('operations.')->group(function () {
             Route::get('receive', [ReceiveStockController::class, 'create'])->name('receive.create');
             Route::post('receive', [ReceiveStockController::class, 'store'])->name('receive.store');
+            Route::get('transfer', [TransferStockController::class, 'create'])->name('transfer.create');
+            Route::post('transfer', [TransferStockController::class, 'store'])->name('transfer.store');
         });
 
         Route::prefix('inventory')->name('inventory.')->group(function () {
