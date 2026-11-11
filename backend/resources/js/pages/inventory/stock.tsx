@@ -3,6 +3,8 @@ import { PackagePlus, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
+import Pagination from '@/components/pagination';
+import type { Paginated } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,17 +38,6 @@ type Balance = {
     color: string;
     hex_code: string | null;
     warehouse: { name: string; code: string };
-};
-
-type Paginated<T> = {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    from: number | null;
-    to: number | null;
-    total: number;
-    prev_page_url: string | null;
-    next_page_url: string | null;
 };
 
 type Filters = {
@@ -374,26 +365,7 @@ export default function StockOverview({
                     </table>
                 </div>
 
-                {balances.total > 0 && (
-                    <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-                        <span>
-                            Showing {balances.from}–{balances.to} of{' '}
-                            {balances.total}
-                        </span>
-                        {balances.last_page > 1 && (
-                            <div className="flex gap-2">
-                                <PageLink
-                                    href={balances.prev_page_url}
-                                    label="Previous"
-                                />
-                                <PageLink
-                                    href={balances.next_page_url}
-                                    label="Next"
-                                />
-                            </div>
-                        )}
-                    </div>
-                )}
+                <Pagination paginator={balances} />
             </div>
         </>
     );
@@ -428,24 +400,6 @@ function SummaryCard({
                 )}
             </CardHeader>
         </Card>
-    );
-}
-
-function PageLink({ href, label }: { href: string | null; label: string }) {
-    if (!href) {
-        return (
-            <Button variant="outline" size="sm" disabled>
-                {label}
-            </Button>
-        );
-    }
-
-    return (
-        <Button variant="outline" size="sm" asChild>
-            <Link href={href} preserveState preserveScroll={false}>
-                {label}
-            </Link>
-        </Button>
     );
 }
 

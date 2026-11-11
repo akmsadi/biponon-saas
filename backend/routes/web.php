@@ -6,6 +6,7 @@ use App\Http\Controllers\Catalog\ProductVariantController;
 use App\Http\Controllers\Catalog\SizeController;
 use App\Http\Controllers\CurrentOrganizationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Inventory\SerialNumberController;
 use App\Http\Controllers\Inventory\StockOverviewController;
 use App\Http\Controllers\Operations\ReceiveStockController;
 use App\Http\Controllers\WarehouseController;
@@ -36,7 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::prefix('inventory')->name('inventory.')->group(function () {
             Route::get('stock', [StockOverviewController::class, 'index'])->name('stock.index');
-            // Route::get('serials', ...)->name('serials');
+            Route::get('serials', [SerialNumberController::class, 'index'])->name('serials.index');
+            Route::get('serials/{serialNumber}/history', [SerialNumberController::class, 'history'])->name('serials.history');
             // Route::get('movements', ...)->name('movements');
         });
     });
