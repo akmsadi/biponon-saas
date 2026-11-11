@@ -7,6 +7,7 @@ use App\Http\Controllers\Catalog\SizeController;
 use App\Http\Controllers\CurrentOrganizationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\SerialNumberController;
+use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Inventory\StockOverviewController;
 use App\Http\Controllers\Operations\ReceiveStockController;
 use App\Http\Controllers\WarehouseController;
@@ -39,7 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('stock', [StockOverviewController::class, 'index'])->name('stock.index');
             Route::get('serials', [SerialNumberController::class, 'index'])->name('serials.index');
             Route::get('serials/{serialNumber}/history', [SerialNumberController::class, 'history'])->name('serials.history');
-            // Route::get('movements', ...)->name('movements');
+            Route::get('movements', [StockMovementController::class, 'index'])->name('movements.index');
+            Route::get('movements/export', [StockMovementController::class, 'export'])->name('movements.export');
+            Route::get('movements/{stockMovement}/serials', [StockMovementController::class, 'serials'])->name('movements.serials');
         });
     });
 });
