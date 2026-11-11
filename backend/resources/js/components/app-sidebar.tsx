@@ -29,6 +29,7 @@ import { index as movementsIndex } from '@/routes/inventory/movements';
 import { index as serialsIndex } from '@/routes/inventory/serials';
 import { index as stockIndex } from '@/routes/inventory/stock';
 import { create as receiveStock } from '@/routes/operations/receive';
+import { create as transferStock } from '@/routes/operations/transfer';
 import { edit as editProfile } from '@/routes/profile';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
@@ -60,7 +61,7 @@ const mainNavItems: SidebarNavItem[] = [
         icon: ArrowLeftRight,
         items: [
             { title: 'Receive stock', href: receiveStock() },
-            // { title: 'Transfer stock', href: '/operations/transfer' },
+            { title: 'Transfer stock', href: transferStock() },
             // { title: 'Dispatch / returns', href: '/operations/dispatch' },
         ],
     },

@@ -1,10 +1,16 @@
 import { Head, useForm } from '@inertiajs/react';
-import { ListPlus, Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { FormEvent } from 'react';
 import ReceiveStockController from '@/actions/App/Http/Controllers/Operations/ReceiveStockController';
-import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import StockLine, {
+    MAX_STOCK_LINES,
+    emptyStockLine,
+    localNow,
+    toLinePayload,
+} from '@/components/stock-line';
+import type { LineProduct, StockLineValues } from '@/components/stock-line';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -26,65 +32,17 @@ import { create } from '@/routes/operations/receive';
 
 type Warehouse = { id: number; name: string; code: string };
 
-type Variant = {
-    id: number;
-    sku: string;
-    size: string;
-    color: string;
-    hex_code: string | null;
-};
-
-type Product = { id: number; name: string; variants: Variant[] };
-
 type Props = {
     warehouses: Warehouse[];
-    products: Product[];
-};
-
-type Line = {
-    key: number;
-    product_id: string;
-    product_variant_id: string;
-    quantity: string;
-    serials: string;
-    showSerials: boolean;
+    products: LineProduct[];
 };
 
 type ReceiveForm = {
     warehouse_id: string;
     received_at: string;
     notes: string;
-    lines: Line[];
+    lines: StockLineValues[];
 };
-
-const MAX_LINES = 50;
-
-let nextLineKey = 0;
-
-function emptyLine(): Line {
-    return {
-        key: nextLineKey++,
-        product_id: '',
-        product_variant_id: '',
-        quantity: '',
-        serials: '',
-        showSerials: false,
-    };
-}
-
-/**
- * The current local time in the format a datetime-local input expects (YYYY-MM-DDTHH:mm).
- */
-function localNow(): string {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-
-    return now.toISOString().slice(0, 16);
-}
-
-function countSerials(text: string): number {
-    return text.split(/\r\n|\r|\n/).filter((line) => line.trim() !== '').length;
-}
 
 export default function ReceiveStock({ warehouses, products }: Props) {
     const { data, setData, transform, post, processing, errors } =
@@ -92,7 +50,7 @@ export default function ReceiveStock({ warehouses, products }: Props) {
             warehouse_id: '',
             received_at: localNow(),
             notes: '',
-            lines: [emptyLine()],
+            lines: [emptyStockLine()],
         });
 
     // Nested keys such as "lines.0.quantity" are not part of the typed error map.
@@ -104,7 +62,7 @@ export default function ReceiveStock({ warehouses, products }: Props) {
         0,
     );
 
-    function updateLine(index: number, changes: Partial<Line>) {
+    function updateLine(index: number, changes: Partial<StockLineValues>) {
         setData(
             'lines',
             data.lines.map((line, lineIndex) =>
@@ -121,11 +79,7 @@ export default function ReceiveStock({ warehouses, products }: Props) {
             // Send an absolute timestamp so the server never guesses the browser's time zone.
             received_at: new Date(form.received_at).toISOString(),
             notes: form.notes,
-            lines: form.lines.map((line) => ({
-                product_variant_id: line.product_variant_id,
-                quantity: line.quantity,
-                serials: line.serials,
-            })),
+            lines: form.lines.map(toLinePayload),
         }));
 
         post(ReceiveStockController.store.url(), {
@@ -136,7 +90,7 @@ export default function ReceiveStock({ warehouses, products }: Props) {
                     ...current,
                     received_at: localNow(),
                     notes: '',
-                    lines: [emptyLine()],
+                    lines: [emptyStockLine()],
                 })),
         });
     }
@@ -246,7 +200,7 @@ export default function ReceiveStock({ warehouses, products }: Props) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {data.lines.map((line, index) => (
-                                    <ReceiveLine
+                                    <StockLine
                                         key={line.key}
                                         line={line}
                                         index={index}
@@ -274,11 +228,13 @@ export default function ReceiveStock({ warehouses, products }: Props) {
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    disabled={data.lines.length >= MAX_LINES}
+                                    disabled={
+                                        data.lines.length >= MAX_STOCK_LINES
+                                    }
                                     onClick={() =>
                                         setData('lines', [
                                             ...data.lines,
-                                            emptyLine(),
+                                            emptyStockLine(),
                                         ])
                                     }
                                 >
@@ -298,182 +254,6 @@ export default function ReceiveStock({ warehouses, products }: Props) {
                 )}
             </div>
         </>
-    );
-}
-
-function ReceiveLine({
-    line,
-    index,
-    products,
-    canRemove,
-    errorFor,
-    onChange,
-    onRemove,
-}: {
-    line: Line;
-    index: number;
-    products: Product[];
-    canRemove: boolean;
-    errorFor: (key: string) => string | undefined;
-    onChange: (changes: Partial<Line>) => void;
-    onRemove: () => void;
-}) {
-    const product = products.find(
-        (candidate) => String(candidate.id) === line.product_id,
-    );
-    const serialCount = countSerials(line.serials);
-    const lineErrors = [
-        errorFor(`lines.${index}.product_variant_id`),
-        errorFor(`lines.${index}.quantity`),
-    ].filter(Boolean) as string[];
-
-    return (
-        <div className="space-y-2 rounded-lg border p-3">
-            <div className="grid gap-3 sm:grid-cols-[1fr_1fr_7rem_auto] sm:items-end">
-                <div className="grid gap-1.5">
-                    <Label className="text-xs text-muted-foreground">
-                        Product
-                    </Label>
-                    <Select
-                        value={line.product_id}
-                        onValueChange={(value) =>
-                            onChange({
-                                product_id: value,
-                                product_variant_id: '',
-                            })
-                        }
-                    >
-                        <SelectTrigger
-                            className="w-full"
-                            aria-label={`Product for line ${index + 1}`}
-                        >
-                            <SelectValue placeholder="Choose a product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {products.map((candidate) => (
-                                <SelectItem
-                                    key={candidate.id}
-                                    value={String(candidate.id)}
-                                >
-                                    {candidate.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="grid gap-1.5">
-                    <Label className="text-xs text-muted-foreground">
-                        Variant
-                    </Label>
-                    <Select
-                        value={line.product_variant_id}
-                        disabled={!product}
-                        onValueChange={(value) =>
-                            onChange({ product_variant_id: value })
-                        }
-                    >
-                        <SelectTrigger
-                            className="w-full"
-                            aria-label={`Variant for line ${index + 1}`}
-                        >
-                            <SelectValue placeholder="Size · color" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {product?.variants.map((variant) => (
-                                <SelectItem
-                                    key={variant.id}
-                                    value={String(variant.id)}
-                                >
-                                    <ColorSwatch
-                                        hex={variant.hex_code}
-                                        className="size-3.5"
-                                    />
-                                    {variant.size} · {variant.color}
-                                    <span className="font-mono text-xs text-muted-foreground">
-                                        {variant.sku}
-                                    </span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="grid gap-1.5">
-                    <Label
-                        htmlFor={`quantity-${line.key}`}
-                        className="text-xs text-muted-foreground"
-                    >
-                        Quantity
-                    </Label>
-                    <Input
-                        id={`quantity-${line.key}`}
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        max={10000}
-                        step={1}
-                        required
-                        value={line.quantity}
-                        onChange={(event) =>
-                            onChange({ quantity: event.target.value })
-                        }
-                    />
-                </div>
-
-                <div className="flex gap-1">
-                    <Button
-                        type="button"
-                        variant={line.showSerials ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() =>
-                            onChange({ showSerials: !line.showSerials })
-                        }
-                    >
-                        <ListPlus />
-                        <span className="sr-only">
-                            Serial numbers for line {index + 1}
-                        </span>
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={!canRemove}
-                        onClick={onRemove}
-                    >
-                        <Trash2 />
-                        <span className="sr-only">Remove line {index + 1}</span>
-                    </Button>
-                </div>
-            </div>
-
-            {lineErrors.map((message) => (
-                <InputError key={message} message={message} />
-            ))}
-
-            {line.showSerials && (
-                <div className="grid gap-1.5">
-                    <Label
-                        htmlFor={`serials-${line.key}`}
-                        className="text-xs text-muted-foreground"
-                    >
-                        Serial numbers, one per line ({serialCount} of{' '}
-                        {line.quantity || 0}). Leave empty to skip.
-                    </Label>
-                    <textarea
-                        id={`serials-${line.key}`}
-                        rows={4}
-                        value={line.serials}
-                        onChange={(event) =>
-                            onChange({ serials: event.target.value })
-                        }
-                        className="w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
-                    />
-                </div>
-            )}
-            <InputError message={errorFor(`lines.${index}.serials`)} />
-        </div>
     );
 }
 
