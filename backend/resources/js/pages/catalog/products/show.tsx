@@ -52,6 +52,7 @@ type Variant = {
     sku: string;
     barcode: string | null;
     price: string | null;
+    reorder_level: number | null;
     is_active: boolean;
     in_stock_count: number;
     size: Size & { is_active: boolean };
@@ -186,6 +187,9 @@ export default function ShowProduct({
                                     In stock
                                 </th>
                                 <th className="px-4 py-3 font-medium">
+                                    Reorder at
+                                </th>
+                                <th className="px-4 py-3 font-medium">
                                     Status
                                 </th>
                                 <th className="px-4 py-3">
@@ -197,7 +201,7 @@ export default function ShowProduct({
                             {variants.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="px-4 py-10 text-center text-muted-foreground"
                                     >
                                         No variants yet. Add the sizes and
@@ -232,6 +236,9 @@ export default function ShowProduct({
                                     </td>
                                     <td className="px-4 py-3">
                                         {variant.in_stock_count}
+                                    </td>
+                                    <td className="px-4 py-3 text-muted-foreground">
+                                        {variant.reorder_level ?? '—'}
                                     </td>
                                     <td className="px-4 py-3">
                                         <Badge
@@ -757,6 +764,31 @@ function EditVariantDialog({
                                         />
                                         <InputError message={errors.price} />
                                     </div>
+                                </div>
+
+                                <div className="grid max-w-48 gap-2">
+                                    <Label htmlFor="reorder_level">
+                                        Reorder level
+                                    </Label>
+                                    <Input
+                                        id="reorder_level"
+                                        name="reorder_level"
+                                        type="number"
+                                        min={0}
+                                        max={1000000}
+                                        step={1}
+                                        defaultValue={
+                                            variant.reorder_level ?? ''
+                                        }
+                                        placeholder="Optional"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Flagged as low stock in a warehouse at
+                                        or below this quantity.
+                                    </p>
+                                    <InputError
+                                        message={errors.reorder_level}
+                                    />
                                 </div>
 
                                 <div className="flex items-center space-x-3">

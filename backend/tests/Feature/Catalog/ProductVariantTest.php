@@ -149,6 +149,22 @@ class ProductVariantTest extends TestCase
         $this->assertSame($this->medium->id, $variant->size_id);
     }
 
+    public function test_a_variant_reorder_level_can_be_set_cleared_and_must_be_a_whole_number(): void
+    {
+        $variant = ProductVariant::factory()->for($this->product)->create();
+        $update = fn (mixed $reorderLevel) => $this->actingAs($this->user)
+            ->put(route('catalog.variants.update', $variant), ['sku' => $variant->sku, 'reorder_level' => $reorderLevel, 'is_active' => true]);
+
+        $update('5')->assertSessionHasNoErrors();
+        $this->assertSame(5, $variant->refresh()->reorder_level);
+
+        $update('')->assertSessionHasNoErrors();
+        $this->assertNull($variant->refresh()->reorder_level);
+
+        $update('-1')->assertSessionHasErrors('reorder_level');
+        $update('2.5')->assertSessionHasErrors('reorder_level');
+    }
+
     public function test_variants_of_another_organization_cannot_be_updated_or_deleted(): void
     {
         $foreignVariant = ProductVariant::factory()->create();

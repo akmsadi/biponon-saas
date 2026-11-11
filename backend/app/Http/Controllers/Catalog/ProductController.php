@@ -62,7 +62,7 @@ class ProductController extends Controller
         $variants = $product->productVariants()
             ->with(['size:id,name,code,sort_order,is_active', 'color:id,name,code,hex_code,sort_order,is_active'])
             ->withSum('stockBalances as in_stock_count', 'quantity')
-            ->get(['id', 'product_id', 'size_id', 'color_id', 'sku', 'barcode', 'price', 'is_active'])
+            ->get(['id', 'product_id', 'size_id', 'color_id', 'sku', 'barcode', 'price', 'reorder_level', 'is_active'])
             ->each(function (ProductVariant $variant): void {
                 $variant->in_stock_count = (int) $variant->in_stock_count;
             })

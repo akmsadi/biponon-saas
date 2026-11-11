@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validates edits to a variant. Size and color are fixed once a variant exists, so they are not accepted.
+ * Validates edits to a variant, including the optional reorder level used for low-stock highlighting. Size and color are fixed once a variant exists, so they are not accepted.
  */
 class UpdateProductVariantRequest extends FormRequest
 {
@@ -44,6 +44,7 @@ class UpdateProductVariantRequest extends FormRequest
                     ->ignore($variant->id),
             ],
             'price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999999.99'],
+            'reorder_level' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'is_active' => ['boolean'],
         ];
     }

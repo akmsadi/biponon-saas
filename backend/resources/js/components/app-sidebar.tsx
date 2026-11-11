@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     ArrowLeftRight,
-    // Boxes,
+    Boxes,
     LayoutGrid,
     Settings,
     Tags,
@@ -25,6 +25,7 @@ import { dashboard } from '@/routes';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as productsIndex } from '@/routes/catalog/products';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
+import { index as stockIndex } from '@/routes/inventory/stock';
 import { create as receiveStock } from '@/routes/operations/receive';
 import { edit as editProfile } from '@/routes/profile';
 import { index as warehousesIndex } from '@/routes/warehouses';
@@ -33,15 +34,15 @@ import type { SidebarNavItem } from '@/types';
 // Unbuilt pages are commented out to avoid dead links; uncomment each as its route lands.
 const mainNavItems: SidebarNavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
-    // {
-    //     title: 'Inventory',
-    //     icon: Boxes,
-    //     items: [
-    //         { title: 'Stock overview', href: '/inventory/stock' },
-    //         { title: 'Serial numbers', href: '/inventory/serials' },
-    //         { title: 'Stock movements', href: '/inventory/movements' },
-    //     ],
-    // },
+    {
+        title: 'Inventory',
+        icon: Boxes,
+        items: [
+            { title: 'Stock overview', href: stockIndex() },
+            // { title: 'Serial numbers', href: '/inventory/serials' },
+            // { title: 'Stock movements', href: '/inventory/movements' },
+        ],
+    },
     {
         title: 'Catalog',
         icon: Tags,
