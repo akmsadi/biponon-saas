@@ -46,7 +46,7 @@ class ProductVariantController extends Controller
     }
 
     /**
-     * Update a variant's SKU, barcode, price and status. Its size and color never change.
+     * Update a variant's SKU, barcode, price, reorder level and status. Its size and color never change.
      */
     public function update(UpdateProductVariantRequest $request, ProductVariant $variant): RedirectResponse
     {
