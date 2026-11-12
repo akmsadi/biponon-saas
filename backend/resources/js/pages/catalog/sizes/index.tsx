@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import SizeController from '@/actions/App/Http/Controllers/Catalog/SizeController';
@@ -32,6 +32,7 @@ export default function Sizes({ sizes }: { sizes: Size[] }) {
     // undefined = closed, null = creating, Size = editing
     const [editing, setEditing] = useState<Size | null | undefined>();
     const [deleting, setDeleting] = useState<Size | null>(null);
+    const canManage = usePage().props.auth.can.manageCatalog;
 
     return (
         <>
@@ -43,9 +44,11 @@ export default function Sizes({ sizes }: { sizes: Size[] }) {
                         title="Sizes"
                         description="Sizes your product variants come in"
                     />
-                    <Button onClick={() => setEditing(null)}>
-                        <Plus /> Add size
-                    </Button>
+                    {canManage && (
+                        <Button onClick={() => setEditing(null)}>
+                            <Plus /> Add size
+                        </Button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -114,38 +117,40 @@ export default function Sizes({ sizes }: { sizes: Size[] }) {
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        setEditing(size)
-                                                    }
-                                                >
-                                                    <Pencil />
-                                                    <span className="sr-only">
-                                                        Edit {size.name}
-                                                    </span>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    disabled={isUsed}
-                                                    title={
-                                                        isUsed
-                                                            ? 'Used by product variants'
-                                                            : undefined
-                                                    }
-                                                    onClick={() =>
-                                                        setDeleting(size)
-                                                    }
-                                                >
-                                                    <Trash2 />
-                                                    <span className="sr-only">
-                                                        Delete {size.name}
-                                                    </span>
-                                                </Button>
-                                            </div>
+                                            {canManage && (
+                                                <div className="flex justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            setEditing(size)
+                                                        }
+                                                    >
+                                                        <Pencil />
+                                                        <span className="sr-only">
+                                                            Edit {size.name}
+                                                        </span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        disabled={isUsed}
+                                                        title={
+                                                            isUsed
+                                                                ? 'Used by product variants'
+                                                                : undefined
+                                                        }
+                                                        onClick={() =>
+                                                            setDeleting(size)
+                                                        }
+                                                    >
+                                                        <Trash2 />
+                                                        <span className="sr-only">
+                                                            Delete {size.name}
+                                                        </span>
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 );
@@ -166,7 +171,9 @@ export default function Sizes({ sizes }: { sizes: Size[] }) {
             >
                 <DialogContent>
                     <DialogTitle>Delete size “{deleting?.name}”?</DialogTitle>
-                    <DialogDescription>This cannot be undone.</DialogDescription>
+                    <DialogDescription>
+                        This cannot be undone.
+                    </DialogDescription>
                     {deleting && (
                         <Form
                             {...SizeController.destroy.form(deleting)}
@@ -217,7 +224,9 @@ function SizeFormDialog({
             onOpenChange={(open) => !open && onClose()}
         >
             <DialogContent>
-                <DialogTitle>{isEditing ? 'Edit size' : 'Add size'}</DialogTitle>
+                <DialogTitle>
+                    {isEditing ? 'Edit size' : 'Add size'}
+                </DialogTitle>
                 <DialogDescription>
                     Inactive sizes stay on existing variants but can't be picked
                     for new ones.

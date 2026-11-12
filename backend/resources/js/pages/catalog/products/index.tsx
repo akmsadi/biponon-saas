@@ -1,4 +1,4 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
@@ -27,6 +27,7 @@ type Product = {
 
 export default function Products({ products }: { products: Product[] }) {
     const [creating, setCreating] = useState(false);
+    const canManage = usePage().props.auth.can.manageCatalog;
 
     return (
         <>
@@ -38,9 +39,11 @@ export default function Products({ products }: { products: Product[] }) {
                         title="Products"
                         description="What you sell, with a variant for each size and color"
                     />
-                    <Button onClick={() => setCreating(true)}>
-                        <Plus /> Add product
-                    </Button>
+                    {canManage && (
+                        <Button onClick={() => setCreating(true)}>
+                            <Plus /> Add product
+                        </Button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">

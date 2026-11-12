@@ -84,12 +84,8 @@ const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage().props;
-    const isAdmin =
-        auth.activeOrganizations.find(
-            (organization) => organization.id === auth.currentOrganizationId,
-        )?.role === 'admin';
 
-    const navItems = isAdmin
+    const navItems = auth.can.manageMembers
         ? [
               ...mainNavItems.slice(0, -1),
               ...adminNavItems,

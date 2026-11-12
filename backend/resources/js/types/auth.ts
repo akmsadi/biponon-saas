@@ -17,10 +17,21 @@ export type ActiveOrganization = {
     role: string;
 };
 
+/**
+ * What the user may do in the current organization (all false outside organization pages).
+ */
+export type Permissions = {
+    runOperations: boolean;
+    manageCatalog: boolean;
+    manageWarehouses: boolean;
+    manageMembers: boolean;
+};
+
 export type Auth = {
     user: User;
     activeOrganizations: ActiveOrganization[];
     currentOrganizationId: number | null;
+    can: Permissions;
 };
 
 export type Passkey = {

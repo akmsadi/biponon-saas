@@ -38,14 +38,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('organization')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+        // Everyone views the catalog and warehouses; managers and admins change them.
         Route::prefix('catalog')->name('catalog.')->group(function () {
-            Route::resource('sizes', SizeController::class)->only(['index', 'store', 'update', 'destroy']);
-            Route::resource('colors', ColorController::class)->only(['index', 'store', 'update', 'destroy']);
-            Route::resource('products', ProductController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
-            Route::resource('products.variants', ProductVariantController::class)->only(['store', 'update', 'destroy'])->shallow();
+            Route::resource('sizes', SizeController::class)->only(['index', 'store', 'update', 'destroy'])
+                ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+            Route::resource('colors', ColorController::class)->only(['index', 'store', 'update', 'destroy'])
+                ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+            Route::resource('products', ProductController::class)->only(['index', 'store', 'show', 'update', 'destroy'])
+                ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+            Route::resource('products.variants', ProductVariantController::class)->only(['store', 'update', 'destroy'])->shallow()
+                ->middleware('role:manager');
         });
 
-        Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy'])
+            ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
 
         Route::prefix('operations')->name('operations.')->group(function () {
             Route::get('receive', [ReceiveStockController::class, 'create'])->name('receive.create');
@@ -58,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('return', [ReturnStockController::class, 'store'])->name('return.store');
         });
 
-        Route::prefix('organization')->name('organization.')->group(function () {
+        Route::prefix('organization')->name('organization.')->middleware('role:admin')->group(function () {
             Route::get('members', [MemberController::class, 'index'])->name('members.index');
             Route::put('members/{member}', [MemberController::class, 'update'])->name('members.update');
             Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');

@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import WarehouseController from '@/actions/App/Http/Controllers/WarehouseController';
@@ -45,6 +45,7 @@ export default function Warehouses({
     // undefined = closed, null = creating, Warehouse = editing
     const [editing, setEditing] = useState<Warehouse | null | undefined>();
     const [deleting, setDeleting] = useState<Warehouse | null>(null);
+    const canManage = usePage().props.auth.can.manageWarehouses;
 
     return (
         <>
@@ -56,9 +57,11 @@ export default function Warehouses({
                         title="Warehouses"
                         description="Places where your stock is kept"
                     />
-                    <Button onClick={() => setEditing(null)}>
-                        <Plus /> Add warehouse
-                    </Button>
+                    {canManage && (
+                        <Button onClick={() => setEditing(null)}>
+                            <Plus /> Add warehouse
+                        </Button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -131,32 +134,34 @@ export default function Warehouses({
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="flex justify-end gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setEditing(warehouse)
-                                                }
-                                            >
-                                                <Pencil />
-                                                <span className="sr-only">
-                                                    Edit {warehouse.name}
-                                                </span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setDeleting(warehouse)
-                                                }
-                                            >
-                                                <Trash2 />
-                                                <span className="sr-only">
-                                                    Delete {warehouse.name}
-                                                </span>
-                                            </Button>
-                                        </div>
+                                        {canManage && (
+                                            <div className="flex justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setEditing(warehouse)
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                    <span className="sr-only">
+                                                        Edit {warehouse.name}
+                                                    </span>
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setDeleting(warehouse)
+                                                    }
+                                                >
+                                                    <Trash2 />
+                                                    <span className="sr-only">
+                                                        Delete {warehouse.name}
+                                                    </span>
+                                                </Button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -304,7 +309,9 @@ function WarehouseFormDialog({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="country_code">Country</Label>
+                                    <Label htmlFor="country_code">
+                                        Country
+                                    </Label>
                                     <Input
                                         id="country_code"
                                         name="country_code"
@@ -324,7 +331,9 @@ function WarehouseFormDialog({
                                     id="is_active"
                                     name="is_active"
                                     value="1"
-                                    defaultChecked={warehouse?.is_active ?? true}
+                                    defaultChecked={
+                                        warehouse?.is_active ?? true
+                                    }
                                 />
                                 <Label htmlFor="is_active">Active</Label>
                             </div>

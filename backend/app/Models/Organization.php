@@ -31,6 +31,16 @@ class Organization extends Model
      */
     public const ROLES = ['admin', 'manager', 'member'];
 
+    /**
+     * Whether a role includes everything the minimum role may do (admin > manager > member).
+     */
+    public static function roleIncludes(?string $role, string $minimum): bool
+    {
+        $rank = array_search($role, self::ROLES, true);
+
+        return $rank !== false && $rank <= array_search($minimum, self::ROLES, true);
+    }
+
     public function invitations(): HasMany
     {
         return $this->hasMany(OrganizationInvitation::class);
