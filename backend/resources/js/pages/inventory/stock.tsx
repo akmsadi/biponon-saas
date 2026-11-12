@@ -1,5 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeftRight, PackagePlus, Search } from 'lucide-react';
+import {
+    ArrowLeftRight,
+    PackageMinus,
+    PackagePlus,
+    Search,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
@@ -25,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { show as showProduct } from '@/routes/catalog/products';
 import { index } from '@/routes/inventory/stock';
+import { create as dispatchStock } from '@/routes/operations/dispatch';
 import { create as receiveStock } from '@/routes/operations/receive';
 import { create as transferStock } from '@/routes/operations/transfer';
 
@@ -123,6 +129,11 @@ export default function StockOverview({
                         description="On-hand quantity of every variant in every warehouse"
                     />
                     <div className="flex flex-wrap justify-end gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href={dispatchStock()}>
+                                <PackageMinus /> Dispatch stock
+                            </Link>
+                        </Button>
                         <Button variant="outline" asChild>
                             <Link href={transferStock()}>
                                 <ArrowLeftRight /> Transfer stock

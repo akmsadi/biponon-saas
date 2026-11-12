@@ -9,7 +9,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\SerialNumberController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Inventory\StockOverviewController;
+use App\Http\Controllers\Operations\DispatchStockController;
 use App\Http\Controllers\Operations\ReceiveStockController;
+use App\Http\Controllers\Operations\ReturnStockController;
 use App\Http\Controllers\Operations\TransferStockController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +39,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('receive', [ReceiveStockController::class, 'store'])->name('receive.store');
             Route::get('transfer', [TransferStockController::class, 'create'])->name('transfer.create');
             Route::post('transfer', [TransferStockController::class, 'store'])->name('transfer.store');
+            Route::get('dispatch', [DispatchStockController::class, 'create'])->name('dispatch.create');
+            Route::post('dispatch', [DispatchStockController::class, 'store'])->name('dispatch.store');
+            Route::get('return', [ReturnStockController::class, 'create'])->name('return.create');
+            Route::post('return', [ReturnStockController::class, 'store'])->name('return.store');
         });
 
         Route::prefix('inventory')->name('inventory.')->group(function () {
