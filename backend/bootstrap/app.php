@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureOrganizationRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetCurrentOrganization;
@@ -23,7 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
-        $middleware->alias(['organization' => SetCurrentOrganization::class]);
+        $middleware->alias([
+            'organization' => SetCurrentOrganization::class,
+            'role' => EnsureOrganizationRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

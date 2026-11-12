@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Laravel\Fortify\Features;
@@ -50,10 +51,29 @@ class HandleInertiaRequests extends Middleware
                     'role' => $org->pivot->role,
                 ]) ?? [],
                 'currentOrganizationId' => fn () => $request->session()->get('current_organization_id'),
+                'can' => fn () => $this->permissions($request),
             ],
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'canRegister' => Features::enabled(Features::registration()),
+        ];
+    }
+
+    /**
+     * What the user may do in the current organization, so pages can hide actions they would be refused.
+     * Pages outside the `organization` middleware get no permissions.
+     *
+     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool}
+     */
+    private function permissions(Request $request): array
+    {
+        $role = $request->attributes->get('organization')?->pivot?->role;
+
+        return [
+            'runOperations' => Organization::roleIncludes($role, 'member'),
+            'manageCatalog' => Organization::roleIncludes($role, 'manager'),
+            'manageWarehouses' => Organization::roleIncludes($role, 'manager'),
+            'manageMembers' => Organization::roleIncludes($role, 'admin'),
         ];
     }
 }

@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import ColorController from '@/actions/App/Http/Controllers/Catalog/ColorController';
@@ -36,6 +36,7 @@ export default function Colors({ colors }: { colors: Color[] }) {
     // undefined = closed, null = creating, Color = editing
     const [editing, setEditing] = useState<Color | null | undefined>();
     const [deleting, setDeleting] = useState<Color | null>(null);
+    const canManage = usePage().props.auth.can.manageCatalog;
 
     return (
         <>
@@ -47,9 +48,11 @@ export default function Colors({ colors }: { colors: Color[] }) {
                         title="Colors"
                         description="Colors your product variants come in"
                     />
-                    <Button onClick={() => setEditing(null)}>
-                        <Plus /> Add color
-                    </Button>
+                    {canManage && (
+                        <Button onClick={() => setEditing(null)}>
+                            <Plus /> Add color
+                        </Button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -95,7 +98,9 @@ export default function Colors({ colors }: { colors: Color[] }) {
                                     >
                                         <td className="px-4 py-3 font-medium">
                                             <div className="flex items-center gap-2">
-                                                <ColorSwatch hex={color.hex_code} />
+                                                <ColorSwatch
+                                                    hex={color.hex_code}
+                                                />
                                                 {color.name}
                                             </div>
                                         </td>
@@ -125,38 +130,40 @@ export default function Colors({ colors }: { colors: Color[] }) {
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        setEditing(color)
-                                                    }
-                                                >
-                                                    <Pencil />
-                                                    <span className="sr-only">
-                                                        Edit {color.name}
-                                                    </span>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    disabled={isUsed}
-                                                    title={
-                                                        isUsed
-                                                            ? 'Used by product variants'
-                                                            : undefined
-                                                    }
-                                                    onClick={() =>
-                                                        setDeleting(color)
-                                                    }
-                                                >
-                                                    <Trash2 />
-                                                    <span className="sr-only">
-                                                        Delete {color.name}
-                                                    </span>
-                                                </Button>
-                                            </div>
+                                            {canManage && (
+                                                <div className="flex justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                            setEditing(color)
+                                                        }
+                                                    >
+                                                        <Pencil />
+                                                        <span className="sr-only">
+                                                            Edit {color.name}
+                                                        </span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        disabled={isUsed}
+                                                        title={
+                                                            isUsed
+                                                                ? 'Used by product variants'
+                                                                : undefined
+                                                        }
+                                                        onClick={() =>
+                                                            setDeleting(color)
+                                                        }
+                                                    >
+                                                        <Trash2 />
+                                                        <span className="sr-only">
+                                                            Delete {color.name}
+                                                        </span>
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 );
@@ -177,7 +184,9 @@ export default function Colors({ colors }: { colors: Color[] }) {
             >
                 <DialogContent>
                     <DialogTitle>Delete color “{deleting?.name}”?</DialogTitle>
-                    <DialogDescription>This cannot be undone.</DialogDescription>
+                    <DialogDescription>
+                        This cannot be undone.
+                    </DialogDescription>
                     {deleting && (
                         <Form
                             {...ColorController.destroy.form(deleting)}

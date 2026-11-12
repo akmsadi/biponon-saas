@@ -1,4 +1,4 @@
-import { Form, Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Form, Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { History, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Catalog/ProductController';
@@ -102,6 +102,7 @@ export default function ShowProduct({
     const [editing, setEditing] = useState<Variant | undefined>();
     const [deleting, setDeleting] = useState<Variant | null>(null);
     const [deletingProduct, setDeletingProduct] = useState(false);
+    const canManage = usePage().props.auth.can.manageCatalog;
 
     useEffect(() => {
         setLayoutProps({
@@ -139,37 +140,49 @@ export default function ShowProduct({
                                 <History /> View movements
                             </Link>
                         </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => setDeletingProduct(true)}
-                        >
-                            <Trash2 /> Delete product
-                        </Button>
+                        {canManage && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeletingProduct(true)}
+                            >
+                                <Trash2 /> Delete product
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                <Card className="max-w-2xl">
-                    <CardHeader>
-                        <CardTitle>Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Form
-                            {...ProductController.update.form(product)}
-                            options={{ preserveScroll: true }}
-                            className="space-y-4"
-                        >
-                            {({ processing, errors }) => (
-                                <>
-                                    <ProductFields
-                                        product={product}
-                                        errors={errors}
-                                    />
-                                    <Button disabled={processing}>Save</Button>
-                                </>
-                            )}
-                        </Form>
-                    </CardContent>
-                </Card>
+                {!canManage && product.description && (
+                    <p className="max-w-2xl text-sm whitespace-pre-line text-muted-foreground">
+                        {product.description}
+                    </p>
+                )}
+
+                {canManage && (
+                    <Card className="max-w-2xl">
+                        <CardHeader>
+                            <CardTitle>Details</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Form
+                                {...ProductController.update.form(product)}
+                                options={{ preserveScroll: true }}
+                                className="space-y-4"
+                            >
+                                {({ processing, errors }) => (
+                                    <>
+                                        <ProductFields
+                                            product={product}
+                                            errors={errors}
+                                        />
+                                        <Button disabled={processing}>
+                                            Save
+                                        </Button>
+                                    </>
+                                )}
+                            </Form>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="flex items-end justify-between gap-4">
                     <Heading
@@ -177,9 +190,11 @@ export default function ShowProduct({
                         title="Variants"
                         description="One per size and color. Stock is received against a variant."
                     />
-                    <Button onClick={() => setAddingVariants(true)}>
-                        <Plus /> Add variants
-                    </Button>
+                    {canManage && (
+                        <Button onClick={() => setAddingVariants(true)}>
+                            <Plus /> Add variants
+                        </Button>
+                    )}
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -266,32 +281,34 @@ export default function ShowProduct({
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="flex justify-end gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setEditing(variant)
-                                                }
-                                            >
-                                                <Pencil />
-                                                <span className="sr-only">
-                                                    Edit {variant.sku}
-                                                </span>
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    setDeleting(variant)
-                                                }
-                                            >
-                                                <Trash2 />
-                                                <span className="sr-only">
-                                                    Delete {variant.sku}
-                                                </span>
-                                            </Button>
-                                        </div>
+                                        {canManage && (
+                                            <div className="flex justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setEditing(variant)
+                                                    }
+                                                >
+                                                    <Pencil />
+                                                    <span className="sr-only">
+                                                        Edit {variant.sku}
+                                                    </span>
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        setDeleting(variant)
+                                                    }
+                                                >
+                                                    <Trash2 />
+                                                    <span className="sr-only">
+                                                        Delete {variant.sku}
+                                                    </span>
+                                                </Button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
