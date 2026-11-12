@@ -116,6 +116,6 @@ class StockOverviewTest extends TestCase
     {
         $this->actingAs(User::factory()->create())
             ->get(route('inventory.stock.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('no-organization'));
     }
 }

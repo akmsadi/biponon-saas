@@ -1,11 +1,11 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeftRight,
     Boxes,
     LayoutGrid,
     Settings,
     Tags,
-    // Users,
+    Users,
     Warehouse,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -31,12 +31,12 @@ import { index as stockIndex } from '@/routes/inventory/stock';
 import { create as dispatchStock } from '@/routes/operations/dispatch';
 import { create as receiveStock } from '@/routes/operations/receive';
 import { create as returnStock } from '@/routes/operations/return';
+import { index as membersIndex } from '@/routes/organization/members';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { edit as editProfile } from '@/routes/profile';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
 
-// Unbuilt pages are commented out to avoid dead links; uncomment each as its route lands.
 const mainNavItems: SidebarNavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
     {
@@ -68,17 +68,35 @@ const mainNavItems: SidebarNavItem[] = [
             { title: 'Return stock', href: returnStock() },
         ],
     },
-    // {
-    //     title: 'Organization',
-    //     icon: Users,
-    //     items: [{ title: 'Members', href: '/organization/members' }],
-    // },
     { title: 'Settings', href: editProfile(), icon: Settings },
+];
+
+// Only admins of the current organization manage its members.
+const adminNavItems: SidebarNavItem[] = [
+    {
+        title: 'Organization',
+        icon: Users,
+        items: [{ title: 'Members', href: membersIndex() }],
+    },
 ];
 
 const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const isAdmin =
+        auth.activeOrganizations.find(
+            (organization) => organization.id === auth.currentOrganizationId,
+        )?.role === 'admin';
+
+    const navItems = isAdmin
+        ? [
+              ...mainNavItems.slice(0, -1),
+              ...adminNavItems,
+              ...mainNavItems.slice(-1),
+          ]
+        : mainNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -94,7 +112,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navItems} />
             </SidebarContent>
 
             <SidebarFooter>

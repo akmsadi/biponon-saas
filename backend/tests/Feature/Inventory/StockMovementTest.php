@@ -86,7 +86,7 @@ class StockMovementTest extends TestCase
     {
         $this->actingAs(User::factory()->create())
             ->get(route('inventory.movements.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('no-organization'));
     }
 
     public function test_it_lists_only_the_current_organizations_movements_newest_first(): void

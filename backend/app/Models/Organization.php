@@ -26,6 +26,28 @@ class Organization extends Model
         return $this->belongsToMany(User::class)->withPivot('role', 'status', 'joined_at')->withTimestamps();
     }
 
+    /**
+     * Roles a member can hold, from most to least privileged.
+     */
+    public const ROLES = ['admin', 'manager', 'member'];
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(OrganizationInvitation::class);
+    }
+
+    /**
+     * Whether the user is an active admin of this organization.
+     */
+    public function hasAdmin(User $user): bool
+    {
+        return $this->users()
+            ->whereKey($user->id)
+            ->wherePivot('role', 'admin')
+            ->wherePivot('status', 'active')
+            ->exists();
+    }
+
     public function colors(): HasMany
     {
         return $this->hasMany(Color::class);

@@ -135,6 +135,6 @@ class SerialNumberTest extends TestCase
     {
         $this->actingAs(User::factory()->create())
             ->get(route('inventory.serials.index'))
-            ->assertForbidden();
+            ->assertRedirect(route('no-organization'));
     }
 }
