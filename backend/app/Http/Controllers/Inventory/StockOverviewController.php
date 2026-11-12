@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Actions\Inventory\SummarizeStock;
 use App\Concerns\ScopesToOrganization;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
@@ -21,7 +22,7 @@ class StockOverviewController extends Controller
      * List on-hand quantities per variant and warehouse, filtered by search, warehouse, zero stock and low stock.
      * A row is low stock when its quantity is at or below the variant's reorder level.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, SummarizeStock $summarizeStock): Response
     {
         $organization = $this->organization($request);
 
@@ -38,7 +39,7 @@ class StockOverviewController extends Controller
             ->join('sizes', 'sizes.id', '=', 'product_variants.size_id')
             ->join('colors', 'colors.id', '=', 'product_variants.color_id')
             ->join('warehouses', 'warehouses.id', '=', 'stock_balances.warehouse_id')
-            ->when($filters['low'], fn (Builder $query) => $this->whereLowStock($query))
+            ->when($filters['low'], fn (Builder $query) => SummarizeStock::whereLowStock($query))
             ->when(! $filters['low'] && ! $filters['zero'], fn (Builder $query) => $query->where('stock_balances.quantity', '>', 0))
             ->when($filters['warehouse'], fn (Builder $query, int $warehouseId) => $query->where('stock_balances.warehouse_id', $warehouseId))
             ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
@@ -80,29 +81,10 @@ class StockOverviewController extends Controller
 
         return Inertia::render('inventory/stock', [
             'balances' => $balances,
-            'summary' => $this->summary($organization),
+            'summary' => $summarizeStock->handle($organization),
             'warehouses' => $organization->warehouses()->orderBy('name')->get(['id', 'name', 'code']),
             'filters' => $filters,
         ]);
-    }
-
-    /**
-     * Totals across all of the organization's stock, independent of the filters.
-     *
-     * @return array{total_units: int, variants_in_stock: int, warehouses_in_stock: int, low_stock: int}
-     */
-    private function summary(Organization $organization): array
-    {
-        $inStock = $this->balances($organization)->where('quantity', '>', 0);
-
-        return [
-            'total_units' => (int) (clone $inStock)->sum('quantity'),
-            'variants_in_stock' => (clone $inStock)->distinct()->count('product_variant_id'),
-            'warehouses_in_stock' => (clone $inStock)->distinct()->count('warehouse_id'),
-            'low_stock' => $this->whereLowStock(
-                $this->balances($organization)->join('product_variants', 'product_variants.id', '=', 'stock_balances.product_variant_id')
-            )->count(),
-        ];
     }
 
     /**
@@ -113,20 +95,5 @@ class StockOverviewController extends Controller
     private function balances(Organization $organization): Builder
     {
         return StockBalance::query()->where('stock_balances.organization_id', $organization->id);
-    }
-
-    /**
-     * Limit a balance query (already joined to product_variants) to rows at or below the variant's reorder level.
-     *
-     * @template TQuery of Builder
-     *
-     * @param  TQuery  $query
-     * @return TQuery
-     */
-    private function whereLowStock(Builder $query): Builder
-    {
-        return $query
-            ->whereNotNull('product_variants.reorder_level')
-            ->whereColumn('stock_balances.quantity', '<=', 'product_variants.reorder_level');
     }
 }

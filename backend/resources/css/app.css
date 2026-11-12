@@ -132,6 +132,28 @@
     --sidebar-ring: oklch(0.439 0 0);
 }
 
+/*
+ * Data-viz roles (validated categorical slots 1-2 plus chart chrome), light then dark.
+ * Charts reference these by role, never raw hex.
+ */
+:root {
+    --viz-in: #2a78d6;
+    --viz-out: #eb6834;
+    --viz-grid: #e1e0d9;
+    --viz-axis: #c3c2b7;
+    --viz-muted: #898781;
+    --viz-status-serious: #ec835a;
+}
+
+.dark {
+    --viz-in: #3987e5;
+    --viz-out: #d95926;
+    --viz-grid: #2c2c2a;
+    --viz-axis: #383835;
+    --viz-muted: #898781;
+    --viz-status-serious: #ec835a;
+}
+
 @layer base {
     * {
         @apply border-border;
