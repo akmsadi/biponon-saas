@@ -21,7 +21,11 @@ class SetCurrentOrganization
         // Prefer the session's organization while the user is still an active member, otherwise the first by name.
         $organization = $organizations->firstWhere('id', $sessionOrganizationId) ?? $organizations->first();
 
-        abort_if($organization === null, 403, 'You are not a member of any active organization.');
+        if ($organization === null) {
+            abort_if($request->expectsJson(), 403, 'You are not a member of any active organization.');
+
+            return redirect()->route('no-organization');
+        }
 
         if ($organization->id !== $sessionOrganizationId) {
             $request->session()->put('current_organization_id', $organization->id);

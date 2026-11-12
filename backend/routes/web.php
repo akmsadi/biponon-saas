@@ -9,17 +9,30 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventory\SerialNumberController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Inventory\StockOverviewController;
+use App\Http\Controllers\InvitationAcceptanceController;
+use App\Http\Controllers\NoOrganizationController;
 use App\Http\Controllers\Operations\DispatchStockController;
 use App\Http\Controllers\Operations\ReceiveStockController;
 use App\Http\Controllers\Operations\ReturnStockController;
 use App\Http\Controllers\Operations\TransferStockController;
+use App\Http\Controllers\Organization\InvitationController;
+use App\Http\Controllers\Organization\MemberController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
+Route::get('invitations/{token}', [InvitationAcceptanceController::class, 'show'])->name('invitations.show');
+Route::post('invitations/{token}/register', [InvitationAcceptanceController::class, 'register'])
+    ->middleware(['guest', 'throttle:6,1'])
+    ->name('invitations.register');
+Route::post('invitations/{token}/accept', [InvitationAcceptanceController::class, 'accept'])
+    ->middleware(['auth', 'throttle:6,1'])
+    ->name('invitations.accept');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('current-organization', [CurrentOrganizationController::class, 'update'])->name('current-organization.update');
+    Route::get('no-organization', NoOrganizationController::class)->name('no-organization');
 
     // Everything that shows organization data goes in here
     Route::middleware('organization')->group(function () {
@@ -43,6 +56,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('dispatch', [DispatchStockController::class, 'store'])->name('dispatch.store');
             Route::get('return', [ReturnStockController::class, 'create'])->name('return.create');
             Route::post('return', [ReturnStockController::class, 'store'])->name('return.store');
+        });
+
+        Route::prefix('organization')->name('organization.')->group(function () {
+            Route::get('members', [MemberController::class, 'index'])->name('members.index');
+            Route::put('members/{member}', [MemberController::class, 'update'])->name('members.update');
+            Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+            Route::post('invitations', [InvitationController::class, 'store'])->middleware('throttle:20,1')->name('invitations.store');
+            Route::post('invitations/{invitation}/resend', [InvitationController::class, 'resend'])->middleware('throttle:20,1')->name('invitations.resend');
+            Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
         });
 
         Route::prefix('inventory')->name('inventory.')->group(function () {
