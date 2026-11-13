@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Operations;
 
+use App\Concerns\ValidatesOutgoingSerialNumbers;
 use App\Models\Organization;
 use App\Models\ProductVariant;
 use App\Models\Warehouse;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Validator;
  */
 class DispatchStockRequest extends FormRequest
 {
+    use ValidatesOutgoingSerialNumbers;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -132,61 +135,19 @@ class DispatchStockRequest extends FormRequest
      */
     private function rejectInvalidSerials(Validator $validator, Warehouse $warehouse, array $lines): void
     {
-        /** @var array<string, true> $seen lower-cased serials already used on an earlier line */
-        $seen = [];
+        $groups = [];
 
         foreach ($lines as $index => $line) {
-            $serials = $line['serials'] ?? [];
-
-            if ($serials === []) {
-                continue;
-            }
-
-            if (count($serials) !== (int) $line['quantity']) {
-                $validator->errors()->add("lines.{$index}.serials", __('Enter exactly :quantity serial numbers (one per unit), or none. You entered :count.', [
-                    'quantity' => $line['quantity'],
-                    'count' => count($serials),
-                ]));
-
-                continue;
-            }
-
-            $repeated = [];
-
-            foreach ($serials as $serial) {
-                $key = mb_strtolower($serial);
-
-                if (isset($seen[$key])) {
-                    $repeated[] = $serial;
-                }
-
-                $seen[$key] = true;
-            }
-
-            if ($repeated !== []) {
-                $validator->errors()->add("lines.{$index}.serials", __('Repeated in this dispatch: :serials', ['serials' => implode(', ', $repeated)]));
-
-                continue;
-            }
-
-            $dispatchable = $this->currentOrganization()->serialNumbers()
-                ->whereIn('serial_number', $serials)
-                ->where('product_variant_id', $line['product_variant_id'])
-                ->where('current_warehouse_id', $warehouse->id)
-                ->where('status', 'in_stock')
-                ->pluck('serial_number')
-                ->map(fn (string $serial): string => mb_strtolower($serial))
-                ->all();
-
-            $unavailable = array_filter($serials, fn (string $serial): bool => ! in_array(mb_strtolower($serial), $dispatchable, true));
-
-            if ($unavailable !== []) {
-                $validator->errors()->add("lines.{$index}.serials", __('Not in stock in :warehouse for this variant: :serials', [
-                    'warehouse' => $warehouse->code,
-                    'serials' => implode(', ', $unavailable),
-                ]));
-            }
+            $groups["lines.{$index}.serials"] = [
+                'quantity' => (int) $line['quantity'],
+                'serials' => $line['serials'] ?? [],
+                'product_variant_id' => (int) $line['product_variant_id'],
+                'warehouse_id' => $warehouse->id,
+                'warehouse_code' => $warehouse->code,
+            ];
         }
+
+        $this->validateOutgoingSerials($validator, $this->currentOrganization(), $groups);
     }
 
     private function currentOrganization(): Organization

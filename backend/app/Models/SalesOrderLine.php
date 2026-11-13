@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One variant on a sales order at an agreed unit price, which everyone in the organization may see.
@@ -40,6 +41,14 @@ class SalesOrderLine extends Model
     public function quantityRemaining(): int
     {
         return max(0, $this->quantity_ordered - $this->quantity_dispatched);
+    }
+
+    /**
+     * The dispatch movements that sent this line's stock out.
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     public function salesOrder(): BelongsTo

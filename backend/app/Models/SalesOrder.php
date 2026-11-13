@@ -58,6 +58,14 @@ class SalesOrder extends Model
     }
 
     /**
+     * Stock can be dispatched while the order is confirmed and not yet complete, closed or cancelled.
+     */
+    public function canDispatch(): bool
+    {
+        return in_array($this->status, ['confirmed', 'partially_dispatched'], true);
+    }
+
+    /**
      * A partly dispatched order can be closed when the rest will not be sent.
      */
     public function canBeClosed(): bool

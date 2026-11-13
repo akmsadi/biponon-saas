@@ -10,7 +10,9 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderLine;
+use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -179,7 +181,9 @@ class SalesOrderController extends Controller
                     ] : []),
                 ]),
             ],
+            'dispatches' => $this->dispatches($lines),
             'can' => [
+                'dispatch' => $salesOrder->canDispatch(),
                 'edit' => $salesOrder->isDraft(),
                 'delete' => $salesOrder->isDraft(),
                 'confirm' => $salesOrder->isDraft() && $this->roleIncludes($request, 'manager'),
@@ -388,6 +392,37 @@ class SalesOrderController extends Controller
             'warehouses' => $organization->warehouses()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
             'products' => $products,
         ];
+    }
+
+    /**
+     * The dispatch movements of the order's lines, newest first.
+     *
+     * @param  Collection<int, SalesOrderLine>  $lines  the order's lines with their variants loaded
+     * @return list<array<string, mixed>>
+     */
+    private function dispatches(Collection $lines): array
+    {
+        $variants = $lines->pluck('productVariant', 'id');
+
+        return StockMovement::query()
+            ->whereIn('sales_order_line_id', $lines->pluck('id'))
+            ->with(['fromWarehouse:id,name,code', 'performedBy:id,name'])
+            ->withCount('serialNumbers')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (StockMovement $movement): array => [
+                'id' => $movement->id,
+                'occurred_at' => $movement->occurred_at->toIso8601String(),
+                'product' => $variants[$movement->sales_order_line_id]->product->name,
+                'sku' => $variants[$movement->sales_order_line_id]->sku,
+                'warehouse' => $movement->fromWarehouse->only(['name', 'code']),
+                'quantity' => $movement->quantity,
+                'serial_count' => $movement->serial_numbers_count,
+                'performed_by' => $movement->performedBy?->name,
+                'notes' => $movement->notes,
+            ])
+            ->all();
     }
 
     private function notADraft(SalesOrder $order): RedirectResponse

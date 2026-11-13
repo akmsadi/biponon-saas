@@ -57,6 +57,9 @@ class StockMovementController extends Controller
                 'purchase_order' => $movement->purchase_order_number === null
                     ? null
                     : ['id' => $movement->purchase_order_id, 'number' => $movement->purchase_order_number],
+                'sales_order' => $movement->sales_order_number === null
+                    ? null
+                    : ['id' => $movement->sales_order_id, 'number' => $movement->sales_order_number],
                 ...($canSeeCosts ? ['unit_cost' => $movement->unit_cost] : []),
                 'occurred_at' => $movement->occurred_at->toIso8601String(),
             ]);
@@ -111,7 +114,7 @@ class StockMovementController extends Controller
                     $movement->to_code ?? '',
                     $movement->quantity,
                     ...($canSeeCosts ? [$movement->unit_cost ?? ''] : []),
-                    $movement->purchase_order_number ?? '',
+                    $movement->purchase_order_number ?? $movement->sales_order_number ?? '',
                     $movement->performer_name ?? '',
                     $movement->serialNumbers->pluck('serial_number')->implode(' '),
                     $movement->notes ?? '',
@@ -190,6 +193,8 @@ class StockMovementController extends Controller
             ->leftJoin('users as performers', 'performers.id', '=', 'stock_movements.performed_by')
             ->leftJoin('purchase_order_lines', 'purchase_order_lines.id', '=', 'stock_movements.purchase_order_line_id')
             ->leftJoin('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_lines.purchase_order_id')
+            ->leftJoin('sales_order_lines', 'sales_order_lines.id', '=', 'stock_movements.sales_order_line_id')
+            ->leftJoin('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
             ->when($filters['type'], fn (Builder $query, string $type) => $query->where('stock_movements.movement_type', $type))
             ->when($filters['product'], fn (Builder $query, int $productId) => $query->where('products.id', $productId))
             ->when($filters['warehouse'], fn (Builder $query, int $warehouseId) => $query->where(fn (Builder $query) => $query
@@ -200,7 +205,8 @@ class StockMovementController extends Controller
             ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('products.name', 'like', '%'.$filters['search'].'%')
                 ->orWhere('product_variants.sku', 'like', '%'.$filters['search'].'%')
-                ->orWhere('purchase_orders.number', 'like', '%'.$filters['search'].'%')))
+                ->orWhere('purchase_orders.number', 'like', '%'.$filters['search'].'%')
+                ->orWhere('sales_orders.number', 'like', '%'.$filters['search'].'%')))
             ->orderByDesc('stock_movements.occurred_at')
             ->orderByDesc('stock_movements.id')
             ->select([
@@ -225,6 +231,8 @@ class StockMovementController extends Controller
                 'performers.name as performer_name',
                 'purchase_orders.id as purchase_order_id',
                 'purchase_orders.number as purchase_order_number',
+                'sales_orders.id as sales_order_id',
+                'sales_orders.number as sales_order_number',
             ]);
     }
 

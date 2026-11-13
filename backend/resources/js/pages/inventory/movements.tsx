@@ -28,6 +28,7 @@ import { useMoneyFormat } from '@/lib/money';
 import { show as showProduct } from '@/routes/catalog/products';
 import { exportMethod, index, serials } from '@/routes/inventory/movements';
 import { show as showPurchaseOrder } from '@/routes/purchasing/orders';
+import { show as showSalesOrder } from '@/routes/sales/orders';
 
 type Warehouse = { name: string; code: string };
 
@@ -47,6 +48,7 @@ type Movement = {
     notes: string | null;
     serial_count: number;
     purchase_order: { id: number; number: string } | null;
+    sales_order: { id: number; number: string } | null;
     unit_cost?: string | null;
     occurred_at: string;
 };
@@ -181,8 +183,8 @@ export default function StockMovements({
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search product, SKU or PO number"
-                            aria-label="Search product, SKU or PO number"
+                            placeholder="Search product, SKU or order number"
+                            aria-label="Search product, SKU or order number"
                             maxLength={100}
                             className="pl-9"
                         />
@@ -382,6 +384,16 @@ export default function StockMovements({
                                                 className="mt-1 block font-mono text-xs text-muted-foreground hover:underline"
                                             >
                                                 {movement.purchase_order.number}
+                                            </Link>
+                                        )}
+                                        {movement.sales_order && (
+                                            <Link
+                                                href={showSalesOrder(
+                                                    movement.sales_order.id,
+                                                )}
+                                                className="mt-1 block font-mono text-xs text-muted-foreground hover:underline"
+                                            >
+                                                {movement.sales_order.number}
                                             </Link>
                                         )}
                                     </td>
