@@ -65,6 +65,7 @@ type Props = {
     variants: Variant[];
     sizes: Size[];
     colors: Color[];
+    defaultReorderLevel: number | null;
 };
 
 const PRICE_PATTERN = '\\d+(\\.\\d{1,2})?';
@@ -96,6 +97,7 @@ export default function ShowProduct({
     variants,
     sizes,
     colors,
+    defaultReorderLevel,
 }: Props) {
     const [addingVariants, setAddingVariants] = useState(false);
     // undefined = closed, Variant = editing
@@ -324,6 +326,7 @@ export default function ShowProduct({
                 variants={variants}
                 sizes={sizes}
                 colors={colors}
+                defaultReorderLevel={defaultReorderLevel}
             />
 
             <EditVariantDialog
@@ -411,6 +414,7 @@ function AddVariantsDialog({
     variants,
     sizes,
     colors,
+    defaultReorderLevel,
 }: {
     open: boolean;
     onClose: () => void;
@@ -418,6 +422,7 @@ function AddVariantsDialog({
     variants: Variant[];
     sizes: Size[];
     colors: Color[];
+    defaultReorderLevel: number | null;
 }) {
     const existing = useMemo(
         () =>
@@ -680,18 +685,40 @@ function AddVariantsDialog({
                                     </div>
                                 )}
 
-                                <div className="grid max-w-48 gap-2">
-                                    <Label htmlFor="price">
-                                        Price for all (optional)
-                                    </Label>
-                                    <Input
-                                        id="price"
-                                        name="price"
-                                        inputMode="decimal"
-                                        pattern={PRICE_PATTERN}
-                                        placeholder="0.00"
-                                    />
-                                    <InputError message={errors.price} />
+                                <div className="flex flex-wrap gap-4">
+                                    <div className="grid max-w-48 gap-2">
+                                        <Label htmlFor="price">
+                                            Price for all (optional)
+                                        </Label>
+                                        <Input
+                                            id="price"
+                                            name="price"
+                                            inputMode="decimal"
+                                            pattern={PRICE_PATTERN}
+                                            placeholder="0.00"
+                                        />
+                                        <InputError message={errors.price} />
+                                    </div>
+                                    <div className="grid max-w-48 gap-2">
+                                        <Label htmlFor="new_reorder_level">
+                                            Reorder level for all
+                                        </Label>
+                                        <Input
+                                            id="new_reorder_level"
+                                            name="reorder_level"
+                                            type="number"
+                                            min={0}
+                                            max={1000000}
+                                            step={1}
+                                            defaultValue={
+                                                defaultReorderLevel ?? ''
+                                            }
+                                            placeholder="Optional"
+                                        />
+                                        <InputError
+                                            message={errors.reorder_level}
+                                        />
+                                    </div>
                                 </div>
                                 <InputError message={errors.variants} />
 

@@ -32,14 +32,14 @@ class RolePermissionsTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool, administerPlatform: bool}}>
+     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}}>
      */
     public static function rolePermissions(): array
     {
         return [
-            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'manageMembers' => false, 'administerPlatform' => false]],
-            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => false, 'administerPlatform' => false]],
-            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => true, 'administerPlatform' => false]],
+            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
+            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
+            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => true, 'manageSettings' => true, 'administerPlatform' => false]],
         ];
     }
 

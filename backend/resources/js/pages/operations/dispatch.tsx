@@ -43,6 +43,7 @@ type Variant = LineVariant & {
 
 type Props = {
     warehouses: Warehouse[];
+    defaultWarehouseId: number | null;
     products: LineProduct<Variant>[];
 };
 
@@ -53,10 +54,14 @@ type DispatchForm = {
     lines: StockLineValues[];
 };
 
-export default function DispatchStock({ warehouses, products }: Props) {
+export default function DispatchStock({
+    warehouses,
+    products,
+    defaultWarehouseId,
+}: Props) {
     const { data, setData, transform, post, processing, errors } =
         useForm<DispatchForm>({
-            warehouse_id: '',
+            warehouse_id: defaultWarehouseId ? String(defaultWarehouseId) : '',
             dispatched_at: localNow(),
             notes: '',
             lines: [emptyStockLine()],

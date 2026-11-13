@@ -43,6 +43,7 @@ type Variant = LineVariant & {
 
 type Props = {
     warehouses: Warehouse[];
+    defaultWarehouseId: number | null;
     products: LineProduct<Variant>[];
 };
 
@@ -58,10 +59,16 @@ function warehouseLabel(warehouse: Warehouse): string {
     return `${warehouse.name} (${warehouse.code})${warehouse.is_active ? '' : ' · inactive'}`;
 }
 
-export default function TransferStock({ warehouses, products }: Props) {
+export default function TransferStock({
+    warehouses,
+    products,
+    defaultWarehouseId,
+}: Props) {
     const { data, setData, transform, post, processing, errors } =
         useForm<TransferForm>({
-            from_warehouse_id: '',
+            from_warehouse_id: defaultWarehouseId
+                ? String(defaultWarehouseId)
+                : '',
             to_warehouse_id: '',
             transferred_at: localNow(),
             notes: '',

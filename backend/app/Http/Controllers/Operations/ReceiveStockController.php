@@ -64,6 +64,7 @@ class ReceiveStockController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'code']),
             'products' => $products,
+            'defaultWarehouseId' => $organization->defaultWarehouseId(),
         ]);
     }
 

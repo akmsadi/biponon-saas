@@ -74,6 +74,7 @@ class TransferStockController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'code', 'is_active']),
             'products' => $products,
+            'defaultWarehouseId' => $organization->defaultWarehouseId(),
         ]);
     }
 
