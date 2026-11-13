@@ -1,4 +1,5 @@
 import { ListPlus, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import ColorSwatch from '@/components/color-swatch';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,8 @@ function countSerials(text: string): number {
 /**
  * Product → variant → quantity row with a toggleable serials textarea. When `availableFor` is given,
  * each variant shows how many units are available and the quantity is capped at that number.
+ * `extraField` adds a column after the quantity (e.g. unit cost) whose error is read from `extraErrorKey`;
+ * `withSerials={false}` hides the serials toggle.
  */
 export default function StockLine<V extends LineVariant>({
     line,
@@ -81,6 +84,9 @@ export default function StockLine<V extends LineVariant>({
     errorFor,
     onChange,
     onRemove,
+    extraField,
+    extraErrorKey,
+    withSerials = true,
 }: {
     line: StockLineValues;
     index: number;
@@ -90,6 +96,9 @@ export default function StockLine<V extends LineVariant>({
     errorFor: (key: string) => string | undefined;
     onChange: (changes: Partial<StockLineValues>) => void;
     onRemove: () => void;
+    extraField?: ReactNode;
+    extraErrorKey?: string;
+    withSerials?: boolean;
 }) {
     const product = products.find(
         (candidate) => String(candidate.id) === line.product_id,
@@ -102,11 +111,18 @@ export default function StockLine<V extends LineVariant>({
     const lineErrors = [
         errorFor(`lines.${index}.product_variant_id`),
         errorFor(`lines.${index}.quantity`),
+        extraErrorKey && errorFor(`lines.${index}.${extraErrorKey}`),
     ].filter(Boolean) as string[];
 
     return (
         <div className="space-y-2 rounded-lg border p-3">
-            <div className="grid gap-3 sm:grid-cols-[1fr_1fr_7rem_auto] sm:items-end">
+            <div
+                className={
+                    extraField
+                        ? 'grid gap-3 sm:grid-cols-[1fr_1fr_6rem_8rem_auto] sm:items-end'
+                        : 'grid gap-3 sm:grid-cols-[1fr_1fr_7rem_auto] sm:items-end'
+                }
+            >
                 <div className="grid gap-1.5">
                     <Label className="text-xs text-muted-foreground">
                         Product
@@ -202,20 +218,24 @@ export default function StockLine<V extends LineVariant>({
                     />
                 </div>
 
+                {extraField}
+
                 <div className="flex gap-1">
-                    <Button
-                        type="button"
-                        variant={line.showSerials ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() =>
-                            onChange({ showSerials: !line.showSerials })
-                        }
-                    >
-                        <ListPlus />
-                        <span className="sr-only">
-                            Serial numbers for line {index + 1}
-                        </span>
-                    </Button>
+                    {withSerials && (
+                        <Button
+                            type="button"
+                            variant={line.showSerials ? 'secondary' : 'ghost'}
+                            size="icon"
+                            onClick={() =>
+                                onChange({ showSerials: !line.showSerials })
+                            }
+                        >
+                            <ListPlus />
+                            <span className="sr-only">
+                                Serial numbers for line {index + 1}
+                            </span>
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="ghost"
@@ -233,7 +253,7 @@ export default function StockLine<V extends LineVariant>({
                 <InputError key={message} message={message} />
             ))}
 
-            {line.showSerials && (
+            {withSerials && line.showSerials && (
                 <div className="grid gap-1.5">
                     <Label
                         htmlFor={`serials-${line.key}`}

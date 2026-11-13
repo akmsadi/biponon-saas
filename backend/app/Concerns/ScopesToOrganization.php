@@ -20,6 +20,14 @@ trait ScopesToOrganization
     }
 
     /**
+     * Whether the user's role in the current organization is at least the given one (admin > manager > member).
+     */
+    protected function roleIncludes(Request $request, string $minimumRole): bool
+    {
+        return Organization::roleIncludes($this->organization($request)->pivot?->role, $minimumRole);
+    }
+
+    /**
      * Abort with a 404 unless the model belongs to the current organization.
      */
     protected function ensureBelongsToOrganization(Request $request, Model $model): void
