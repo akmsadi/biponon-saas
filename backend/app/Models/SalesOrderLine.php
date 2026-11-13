@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * One variant on a sales order at an agreed unit price, which everyone in the organization may see.
  */
-#[Fillable(['sales_order_id', 'product_variant_id', 'quantity_ordered', 'quantity_dispatched', 'unit_price'])]
+#[Fillable(['sales_order_id', 'product_variant_id', 'quantity_ordered', 'quantity_dispatched', 'quantity_returned', 'unit_price'])]
 class SalesOrderLine extends Model
 {
     /** @use HasFactory<SalesOrderLineFactory> */
@@ -23,6 +23,7 @@ class SalesOrderLine extends Model
         return [
             'quantity_ordered' => 'integer',
             'quantity_dispatched' => 'integer',
+            'quantity_returned' => 'integer',
             'unit_price' => 'decimal:2',
         ];
     }
@@ -44,7 +45,15 @@ class SalesOrderLine extends Model
     }
 
     /**
-     * The dispatch movements that sent this line's stock out.
+     * Units sent that have not come back yet, so could still be returned.
+     */
+    public function quantityReturnable(): int
+    {
+        return max(0, $this->quantity_dispatched - $this->quantity_returned);
+    }
+
+    /**
+     * The dispatch and return movements of this line's stock.
      */
     public function stockMovements(): HasMany
     {
