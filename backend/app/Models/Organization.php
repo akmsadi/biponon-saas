@@ -19,13 +19,14 @@ class Organization extends Model
     /**
      * Every organization setting and the value used while it is not set.
      *
-     * @var array{contact_email: ?string, phone: ?string, address: ?string, timezone: string, default_warehouse_id: ?int, default_reorder_level: ?int}
+     * @var array{contact_email: ?string, phone: ?string, address: ?string, timezone: string, currency: string, default_warehouse_id: ?int, default_reorder_level: ?int}
      */
     public const SETTING_DEFAULTS = [
         'contact_email' => null,
         'phone' => null,
         'address' => null,
         'timezone' => 'Asia/Dhaka',
+        'currency' => 'BDT',
         'default_warehouse_id' => null,
         'default_reorder_level' => null,
     ];
@@ -153,6 +154,11 @@ class Organization extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(Supplier::class);
     }
 
     public function warehouses(): HasMany

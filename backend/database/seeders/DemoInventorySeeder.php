@@ -10,6 +10,7 @@ use App\Models\SerialNumber;
 use App\Models\Size;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
 use Carbon\CarbonInterface;
@@ -79,6 +80,15 @@ class DemoInventorySeeder extends Seeder
         ['name' => 'Gulshan Outlet', 'code' => 'GUL', 'address_line' => 'Road 11, Gulshan 2', 'city' => 'Dhaka'],
     ];
 
+    /**
+     * @var list<array{name: string, contact_name: string, email: string, phone: string, address: string}>
+     */
+    private const SUPPLIERS = [
+        ['name' => 'Rahman Textiles', 'contact_name' => 'Abdur Rahman', 'email' => 'sales@rahmantextiles.test', 'phone' => '+880 1711 000001', 'address' => 'Narayanganj, Dhaka'],
+        ['name' => 'Gazipur Garments Ltd', 'contact_name' => 'Nasrin Akter', 'email' => 'orders@gazipurgarments.test', 'phone' => '+880 1711 000002', 'address' => 'Konabari, Gazipur'],
+        ['name' => 'Chittagong Stitch House', 'contact_name' => 'Imran Hossain', 'email' => 'imran@stitchhouse.test', 'phone' => '+880 1811 000003', 'address' => 'Agrabad, Chattogram'],
+    ];
+
     public function run(): void
     {
         $admin = User::where('email', 'akmsadi.cste@gmail.com')->firstOrFail();
@@ -93,6 +103,22 @@ class DemoInventorySeeder extends Seeder
 
         $this->seedInventory($biponon, $admin, productCount: 8);
         $this->seedInventory($acme, $admin, productCount: 4);
+
+        $this->seedSuppliers($biponon);
+        $this->seedSuppliers($acme);
+    }
+
+    /**
+     * Suppliers are seeded separately from inventory, so they also reach organizations seeded before suppliers existed.
+     */
+    private function seedSuppliers(Organization $organization): void
+    {
+        foreach (self::SUPPLIERS as $supplier) {
+            Supplier::firstOrCreate(
+                ['organization_id' => $organization->id, 'name' => $supplier['name']],
+                [...$supplier, 'is_active' => true],
+            );
+        }
     }
 
     private function createOrganization(string $name, string $slug, User $creator): Organization

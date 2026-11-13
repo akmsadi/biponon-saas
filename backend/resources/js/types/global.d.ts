@@ -14,6 +14,7 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             canRegister: boolean;
             organizationTimezone: string | null;
+            organizationCurrency: string | null;
             [key: string]: unknown;
         };
     }

@@ -33,6 +33,7 @@ class SettingsController extends Controller
                 'phone' => $organization->setting('phone'),
                 'address' => $organization->setting('address'),
                 'timezone' => $organization->setting('timezone'),
+                'currency' => $organization->setting('currency'),
             ],
             'timezones' => timezone_identifiers_list(),
         ]);

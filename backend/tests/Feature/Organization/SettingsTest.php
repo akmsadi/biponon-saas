@@ -39,6 +39,7 @@ class SettingsTest extends TestCase
                 ->where('settings.slug', 'acme')
                 ->where('settings.contact_email', null)
                 ->where('settings.timezone', 'Asia/Dhaka')
+                ->where('settings.currency', 'BDT')
                 ->where('auth.can.manageSettings', false));
 
         $this->actingAs($member)
@@ -59,6 +60,7 @@ class SettingsTest extends TestCase
                 'phone' => '+880 1700 000000',
                 'address' => 'Road 1, Dhaka',
                 'timezone' => 'Europe/London',
+                'currency' => ' gbp ',
             ])
             ->assertSessionHasNoErrors();
 
@@ -70,6 +72,32 @@ class SettingsTest extends TestCase
         $this->assertSame('+880 1700 000000', $organization->setting('phone'));
         $this->assertSame('Road 1, Dhaka', $organization->setting('address'));
         $this->assertSame('Europe/London', $organization->setting('timezone'));
+        $this->assertSame('GBP', $organization->setting('currency'));
+    }
+
+    public function test_organization_pages_receive_the_organizations_currency(): void
+    {
+        $this->organization->putSettings(['currency' => 'USD']);
+        $this->organization->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationCurrency', 'USD'));
+
+        $this->actingAs($this->admin)
+            ->get(route('profile.edit'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationCurrency', null));
+    }
+
+    public function test_the_currency_must_be_a_three_letter_code(): void
+    {
+        foreach (['', 'TK', 'TAKA', '৳', '12A'] as $invalidCurrency) {
+            $this->actingAs($this->admin)
+                ->put(route('organization.settings.general.update'), ['name' => 'Acme', 'timezone' => 'UTC', 'currency' => $invalidCurrency])
+                ->assertSessionHasErrors('currency');
+        }
+
+        $this->assertSame('BDT', $this->organization->fresh()->setting('currency'));
     }
 
     public function test_organization_pages_receive_the_organizations_timezone(): void

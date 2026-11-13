@@ -19,6 +19,7 @@ use App\Http\Controllers\Operations\TransferStockController;
 use App\Http\Controllers\Organization\InvitationController;
 use App\Http\Controllers\Organization\MemberController;
 use App\Http\Controllers\Organization\SettingsController;
+use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +63,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy'])
             ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+
+        Route::prefix('purchasing')->name('purchasing.')->group(function () {
+            Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy'])
+                ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+        });
 
         Route::prefix('operations')->name('operations.')->group(function () {
             Route::get('receive', [ReceiveStockController::class, 'create'])->name('receive.create');
