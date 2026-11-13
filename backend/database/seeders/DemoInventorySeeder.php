@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Color;
+use App\Models\Customer;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -89,6 +90,12 @@ class DemoInventorySeeder extends Seeder
         ['name' => 'Chittagong Stitch House', 'contact_name' => 'Imran Hossain', 'email' => 'imran@stitchhouse.test', 'phone' => '+880 1811 000003', 'address' => 'Agrabad, Chattogram'],
     ];
 
+    private const CUSTOMERS = [
+        ['name' => 'Karim Fashion House', 'contact_name' => 'Karim Uddin', 'email' => 'karim@fashionhouse.test', 'phone' => '+880 1911 000011', 'address' => 'New Market, Dhaka'],
+        ['name' => 'Sylhet Style Corner', 'contact_name' => 'Farhana Begum', 'email' => 'orders@stylecorner.test', 'phone' => '+880 1911 000012', 'address' => 'Zindabazar, Sylhet'],
+        ['name' => 'Online Shop Walk-ins', 'contact_name' => null, 'email' => null, 'phone' => null, 'address' => null],
+    ];
+
     public function run(): void
     {
         $admin = User::where('email', 'akmsadi.cste@gmail.com')->firstOrFail();
@@ -106,6 +113,22 @@ class DemoInventorySeeder extends Seeder
 
         $this->seedSuppliers($biponon);
         $this->seedSuppliers($acme);
+
+        $this->seedCustomers($biponon);
+        $this->seedCustomers($acme);
+    }
+
+    /**
+     * Customers are seeded separately from inventory, so they also reach organizations seeded before customers existed.
+     */
+    private function seedCustomers(Organization $organization): void
+    {
+        foreach (self::CUSTOMERS as $customer) {
+            Customer::firstOrCreate(
+                ['organization_id' => $organization->id, 'name' => $customer['name']],
+                [...$customer, 'is_active' => true],
+            );
+        }
     }
 
     /**

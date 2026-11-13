@@ -22,6 +22,7 @@ use App\Http\Controllers\Organization\SettingsController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
+use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('orders/{purchaseOrder}/receive', [PurchaseOrderReceiptController::class, 'create'])->name('orders.receive.create');
             Route::post('orders/{purchaseOrder}/receive', [PurchaseOrderReceiptController::class, 'store'])->name('orders.receive.store');
             Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy'])
+                ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
+        });
+
+        Route::prefix('sales')->name('sales.')->group(function () {
+            Route::resource('customers', CustomerController::class)->only(['index', 'store', 'update', 'destroy'])
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });
 
