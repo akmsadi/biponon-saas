@@ -123,8 +123,8 @@ class ProductController extends Controller
             return back();
         }
 
-        if ($product->productVariants()->whereHas('purchaseOrderLines')->exists()) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __('This product is on purchase orders. Deactivate it instead.')]);
+        if ($product->productVariants()->where(fn ($query) => $query->whereHas('purchaseOrderLines')->orWhereHas('salesOrderLines'))->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This product is on purchase or sales orders. Deactivate it instead.')]);
 
             return back();
         }

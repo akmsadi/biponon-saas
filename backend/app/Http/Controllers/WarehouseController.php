@@ -78,8 +78,8 @@ class WarehouseController extends Controller
             return back();
         }
 
-        if ($warehouse->purchaseOrders()->exists()) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __('This warehouse is on purchase orders. Deactivate it instead.')]);
+        if ($warehouse->purchaseOrders()->exists() || $warehouse->salesOrders()->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This warehouse is on purchase or sales orders. Deactivate it instead.')]);
 
             return back();
         }
