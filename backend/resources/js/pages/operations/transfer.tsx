@@ -7,9 +7,9 @@ import InputError from '@/components/input-error';
 import StockLine, {
     MAX_STOCK_LINES,
     emptyStockLine,
-    localNow,
     toLinePayload,
 } from '@/components/stock-line';
+import { inputToIso, nowForInput, useTimeZone } from '@/lib/datetime';
 import type {
     LineProduct,
     LineVariant,
@@ -64,13 +64,14 @@ export default function TransferStock({
     products,
     defaultWarehouseId,
 }: Props) {
+    const timeZone = useTimeZone();
     const { data, setData, transform, post, processing, errors } =
         useForm<TransferForm>({
             from_warehouse_id: defaultWarehouseId
                 ? String(defaultWarehouseId)
                 : '',
             to_warehouse_id: '',
-            transferred_at: localNow(),
+            transferred_at: nowForInput(timeZone),
             notes: '',
             lines: [emptyStockLine()],
         });
@@ -134,7 +135,7 @@ export default function TransferStock({
             from_warehouse_id: form.from_warehouse_id,
             to_warehouse_id: form.to_warehouse_id,
             // Send an absolute timestamp so the server never guesses the browser's time zone.
-            transferred_at: new Date(form.transferred_at).toISOString(),
+            transferred_at: inputToIso(form.transferred_at, timeZone),
             notes: form.notes,
             lines: form.lines.map(toLinePayload),
         }));
@@ -145,7 +146,7 @@ export default function TransferStock({
             onSuccess: () =>
                 setData((current) => ({
                     ...current,
-                    transferred_at: localNow(),
+                    transferred_at: nowForInput(timeZone),
                     notes: '',
                     lines: [emptyStockLine()],
                 })),
@@ -251,7 +252,7 @@ export default function TransferStock({
                                         id="transferred_at"
                                         type="datetime-local"
                                         required
-                                        max={localNow()}
+                                        max={nowForInput(timeZone)}
                                         value={data.transferred_at}
                                         onChange={(event) =>
                                             setData(

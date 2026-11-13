@@ -7,9 +7,9 @@ import InputError from '@/components/input-error';
 import StockLine, {
     MAX_STOCK_LINES,
     emptyStockLine,
-    localNow,
     toLinePayload,
 } from '@/components/stock-line';
+import { inputToIso, nowForInput, useTimeZone } from '@/lib/datetime';
 import type { LineProduct, StockLineValues } from '@/components/stock-line';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,10 +50,11 @@ export default function ReceiveStock({
     products,
     defaultWarehouseId,
 }: Props) {
+    const timeZone = useTimeZone();
     const { data, setData, transform, post, processing, errors } =
         useForm<ReceiveForm>({
             warehouse_id: defaultWarehouseId ? String(defaultWarehouseId) : '',
-            received_at: localNow(),
+            received_at: nowForInput(timeZone),
             notes: '',
             lines: [emptyStockLine()],
         });
@@ -82,7 +83,7 @@ export default function ReceiveStock({
         transform((form) => ({
             warehouse_id: form.warehouse_id,
             // Send an absolute timestamp so the server never guesses the browser's time zone.
-            received_at: new Date(form.received_at).toISOString(),
+            received_at: inputToIso(form.received_at, timeZone),
             notes: form.notes,
             lines: form.lines.map(toLinePayload),
         }));
@@ -93,7 +94,7 @@ export default function ReceiveStock({
             onSuccess: () =>
                 setData((current) => ({
                     ...current,
-                    received_at: localNow(),
+                    received_at: nowForInput(timeZone),
                     notes: '',
                     lines: [emptyStockLine()],
                 })),
@@ -167,7 +168,7 @@ export default function ReceiveStock({
                                         id="received_at"
                                         type="datetime-local"
                                         required
-                                        max={localNow()}
+                                        max={nowForInput(timeZone)}
                                         value={data.received_at}
                                         onChange={(event) =>
                                             setData(

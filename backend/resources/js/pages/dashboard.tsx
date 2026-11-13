@@ -21,6 +21,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useDateFormat } from '@/lib/datetime';
 import { dashboard } from '@/routes';
 import { show as showProduct } from '@/routes/catalog/products';
 import { index as movementsIndex } from '@/routes/inventory/movements';
@@ -78,15 +79,6 @@ function humanize(value: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function formatDateTime(value: string): string {
-    return new Date(value).toLocaleString(undefined, {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-}
-
 function StatTile({
     label,
     value,
@@ -121,6 +113,7 @@ export default function Dashboard({
     recentMovements,
     warehouses,
 }: Props) {
+    const { formatDateTime } = useDateFormat();
     const { can } = usePage().props.auth;
     const totalWarehouseUnits = warehouses.reduce(
         (sum, warehouse) => sum + warehouse.units,
@@ -366,6 +359,12 @@ export default function Dashboard({
                                                 <td className="py-2 pr-3 whitespace-nowrap text-muted-foreground">
                                                     {formatDateTime(
                                                         movement.occurred_at,
+                                                        {
+                                                            day: 'numeric',
+                                                            month: 'short',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        },
                                                     )}
                                                 </td>
                                                 <td className="py-2 pr-3">

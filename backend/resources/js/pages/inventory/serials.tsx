@@ -22,6 +22,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useDateFormat } from '@/lib/datetime';
 import { show as showProduct } from '@/routes/catalog/products';
 import { history, index } from '@/routes/inventory/serials';
 
@@ -75,15 +76,6 @@ function humanize(value: string): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function formatDateTime(value: string | null): string {
-    return value
-        ? new Date(value).toLocaleString(undefined, {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-          })
-        : '—';
-}
-
 /**
  * Visit the page with new filters, dropping defaults so the URL stays clean. Changing a filter resets to page 1.
  */
@@ -105,6 +97,7 @@ export default function SerialNumbers({
     statuses,
     filters,
 }: Props) {
+    const { formatDateTime } = useDateFormat();
     const [search, setSearch] = useState(filters.search);
     const [viewing, setViewing] = useState<Serial | null>(null);
     const isFirstRender = useRef(true);
@@ -352,6 +345,7 @@ function HistoryDialog({
     serial: Serial | null;
     onClose: () => void;
 }) {
+    const { formatDateTime } = useDateFormat();
     const [movements, setMovements] = useState<Movement[] | null>(null);
     const [failed, setFailed] = useState(false);
     const { get, processing } = useHttp<

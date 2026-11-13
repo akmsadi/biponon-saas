@@ -54,16 +54,6 @@ export function emptyStockLine(): StockLineValues {
 }
 
 /**
- * The current local time in the format a datetime-local input expects (YYYY-MM-DDTHH:mm).
- */
-export function localNow(): string {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-
-    return now.toISOString().slice(0, 16);
-}
-
-/**
  * The fields the server expects for each line.
  */
 export function toLinePayload(line: StockLineValues) {

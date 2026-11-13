@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             canRegister: boolean;
+            organizationTimezone: string | null;
             [key: string]: unknown;
         };
     }

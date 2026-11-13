@@ -72,7 +72,7 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Download every movement matching the current filters as CSV, with dates in the viewer's timezone.
+     * Download every movement matching the current filters as CSV, with dates in the organization's timezone.
      */
     public function export(Request $request): StreamedResponse
     {
@@ -124,14 +124,14 @@ class StockMovementController extends Controller
     }
 
     /**
-     * Read the filters from the query string, ignoring anything malformed.
+     * Read the filters from the query string, ignoring anything malformed. Dates are whole days in the
+     * organization's timezone.
      *
      * @return array{search: string, type: ?string, warehouse: ?int, product: ?int, date_from: ?Carbon, date_to: ?Carbon, tz: string}
      */
     private function filters(Request $request): array
     {
-        $timezone = $request->string('tz')->toString();
-        $timezone = in_array($timezone, timezone_identifiers_list(), true) ? $timezone : config('app.timezone');
+        $timezone = $this->organization($request)->setting('timezone');
 
         return [
             'search' => mb_substr(trim($request->string('search')->toString()), 0, 100),
