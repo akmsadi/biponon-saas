@@ -61,9 +61,10 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * What the user may do in the current organization, so pages can hide actions they would be refused.
-     * Pages outside the `organization` middleware get no permissions.
+     * Pages outside the `organization` middleware get no organization permissions. `administerPlatform` does not
+     * depend on the organization.
      *
-     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool}
+     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool, administerPlatform: bool}
      */
     private function permissions(Request $request): array
     {
@@ -74,6 +75,7 @@ class HandleInertiaRequests extends Middleware
             'manageCatalog' => Organization::roleIncludes($role, 'manager'),
             'manageWarehouses' => Organization::roleIncludes($role, 'manager'),
             'manageMembers' => Organization::roleIncludes($role, 'admin'),
+            'administerPlatform' => $request->user()?->isSuperAdmin() ?? false,
         ];
     }
 }

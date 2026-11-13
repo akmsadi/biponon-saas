@@ -19,7 +19,7 @@ class AdminUserSeeder extends Seeder
             ],
         );
 
-        $user->forceFill(['email_verified_at' => now()])->save();
+        $user->forceFill(['email_verified_at' => now(), 'is_super_admin' => true])->save();
 
         $organization = Organization::updateOrCreate(
             ['slug' => 'biponon'],

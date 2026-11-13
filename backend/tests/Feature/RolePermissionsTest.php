@@ -32,14 +32,14 @@ class RolePermissionsTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool}}>
+     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool, administerPlatform: bool}}>
      */
     public static function rolePermissions(): array
     {
         return [
-            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'manageMembers' => false]],
-            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => false]],
-            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => true]],
+            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'manageMembers' => false, 'administerPlatform' => false]],
+            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => false, 'administerPlatform' => false]],
+            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'manageMembers' => true, 'administerPlatform' => false]],
         ];
     }
 
