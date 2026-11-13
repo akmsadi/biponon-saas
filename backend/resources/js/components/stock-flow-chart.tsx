@@ -14,6 +14,7 @@ import type {
     ValueType,
 } from 'recharts/types/component/DefaultTooltipContent';
 import { Button } from '@/components/ui/button';
+import { dayKeyIn, useTimeZone } from '@/lib/datetime';
 
 export type HourlyFlow = {
     /** UTC hour as "YYYY-MM-DD HH". */
@@ -41,39 +42,34 @@ const SERIES = [
     { key: 'units_out', label: 'Out (dispatched)', color: 'var(--viz-out)' },
 ] as const;
 
-function localDayKey(date: Date): string {
-    return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, '0'),
-        String(date.getDate()).padStart(2, '0'),
-    ].join('-');
-}
-
 /**
- * Group UTC hours into the browser's last 30 local days, today included, with empty days kept at zero.
+ * Group UTC hours into the last 30 days of the timezone (the organization's), today included, with empty days
+ * kept at zero.
  */
-function toLocalDays(hours: HourlyFlow[]): DayFlow[] {
+function toLocalDays(hours: HourlyFlow[], timeZone?: string): DayFlow[] {
     const days = new Map<string, DayFlow>();
-    const today = new Date();
+    const [year, month, day] = dayKeyIn(new Date(), timeZone)
+        .split('-')
+        .map(Number);
 
     for (let offset = DAYS - 1; offset >= 0; offset--) {
-        const date = new Date(
-            today.getFullYear(),
-            today.getMonth(),
-            today.getDate() - offset,
-        );
+        // Noon UTC on that calendar day, labelled in UTC, so the label is that day whatever the browser's zone.
+        const date = new Date(Date.UTC(year, month - 1, day - offset, 12));
+        const key = date.toISOString().slice(0, 10);
 
-        days.set(localDayKey(date), {
-            key: localDayKey(date),
+        days.set(key, {
+            key,
             label: date.toLocaleDateString(undefined, {
                 day: 'numeric',
                 month: 'short',
+                timeZone: 'UTC',
             }),
             longLabel: date.toLocaleDateString(undefined, {
                 weekday: 'short',
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
+                timeZone: 'UTC',
             }),
             units_in: 0,
             units_out: 0,
@@ -82,7 +78,10 @@ function toLocalDays(hours: HourlyFlow[]): DayFlow[] {
 
     for (const row of hours) {
         const day = days.get(
-            localDayKey(new Date(`${row.hour.replace(' ', 'T')}:00:00Z`)),
+            dayKeyIn(
+                new Date(`${row.hour.replace(' ', 'T')}:00:00Z`),
+                timeZone,
+            ),
         );
 
         if (day) {
@@ -131,7 +130,8 @@ function FlowTooltip({
  */
 export default function StockFlowChart({ hours }: { hours: HourlyFlow[] }) {
     const [showTable, setShowTable] = useState(false);
-    const days = toLocalDays(hours);
+    const timeZone = useTimeZone();
+    const days = toLocalDays(hours, timeZone);
     const hasFlow = days.some((day) => day.units_in > 0 || day.units_out > 0);
 
     return (

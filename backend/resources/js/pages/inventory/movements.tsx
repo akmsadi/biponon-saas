@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useDateFormat } from '@/lib/datetime';
 import { show as showProduct } from '@/routes/catalog/products';
 import { exportMethod, index, serials } from '@/routes/inventory/movements';
 
@@ -67,8 +68,6 @@ type SerialRow = { id: number; serial_number: string; status: string };
 
 const ALL = 'all';
 
-const TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
 /**
  * Turn a stored code such as in_stock into "In stock".
  */
@@ -78,22 +77,11 @@ function humanize(value: string): string {
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function formatDateTime(value: string): string {
-    return new Date(value).toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-    });
-}
-
 /**
- * The query string for a set of filters, without defaults. Dates are interpreted in the viewer's timezone.
+ * The query string for a set of filters, without defaults. The server reads dates as whole days in the
+ * organization's timezone.
  */
-function queryFor(
-    filters: Filters,
-    alwaysIncludeTimezone = false,
-): Record<string, string | number> {
-    const hasDates = Boolean(filters.date_from || filters.date_to);
-
+function queryFor(filters: Filters): Record<string, string | number> {
     return {
         ...(filters.search && { search: filters.search }),
         ...(filters.type && { type: filters.type }),
@@ -101,7 +89,6 @@ function queryFor(
         ...(filters.product && { product: filters.product }),
         ...(filters.date_from && { date_from: filters.date_from }),
         ...(filters.date_to && { date_to: filters.date_to }),
-        ...((hasDates || alwaysIncludeTimezone) && { tz: TIMEZONE }),
     };
 }
 
@@ -132,6 +119,7 @@ export default function StockMovements({
     product,
     filters,
 }: Props) {
+    const { formatDateTime } = useDateFormat();
     const [search, setSearch] = useState(filters.search);
     const [viewingSerials, setViewingSerials] = useState<Movement | null>(null);
     const isFirstRender = useRef(true);
@@ -171,7 +159,7 @@ export default function StockMovements({
                     <Button variant="outline" asChild>
                         <a
                             href={exportMethod.url({
-                                query: queryFor(filters, true),
+                                query: queryFor(filters),
                             })}
                         >
                             <Download /> Export CSV
@@ -461,6 +449,7 @@ function SerialsDialog({
     movement: Movement | null;
     onClose: () => void;
 }) {
+    const { formatDateTime } = useDateFormat();
     const [rows, setRows] = useState<SerialRow[] | null>(null);
     const [failed, setFailed] = useState(false);
     const { get, processing } = useHttp<

@@ -7,9 +7,9 @@ import InputError from '@/components/input-error';
 import StockLine, {
     MAX_STOCK_LINES,
     emptyStockLine,
-    localNow,
     toLinePayload,
 } from '@/components/stock-line';
+import { inputToIso, nowForInput, useTimeZone } from '@/lib/datetime';
 import type {
     LineProduct,
     LineVariant,
@@ -59,10 +59,11 @@ export default function DispatchStock({
     products,
     defaultWarehouseId,
 }: Props) {
+    const timeZone = useTimeZone();
     const { data, setData, transform, post, processing, errors } =
         useForm<DispatchForm>({
             warehouse_id: defaultWarehouseId ? String(defaultWarehouseId) : '',
-            dispatched_at: localNow(),
+            dispatched_at: nowForInput(timeZone),
             notes: '',
             lines: [emptyStockLine()],
         });
@@ -117,7 +118,7 @@ export default function DispatchStock({
         transform((form) => ({
             warehouse_id: form.warehouse_id,
             // Send an absolute timestamp so the server never guesses the browser's time zone.
-            dispatched_at: new Date(form.dispatched_at).toISOString(),
+            dispatched_at: inputToIso(form.dispatched_at, timeZone),
             notes: form.notes,
             lines: form.lines.map(toLinePayload),
         }));
@@ -128,7 +129,7 @@ export default function DispatchStock({
             onSuccess: () =>
                 setData((current) => ({
                     ...current,
-                    dispatched_at: localNow(),
+                    dispatched_at: nowForInput(timeZone),
                     notes: '',
                     lines: [emptyStockLine()],
                 })),
@@ -197,7 +198,7 @@ export default function DispatchStock({
                                         id="dispatched_at"
                                         type="datetime-local"
                                         required
-                                        max={localNow()}
+                                        max={nowForInput(timeZone)}
                                         value={data.dispatched_at}
                                         onChange={(event) =>
                                             setData(

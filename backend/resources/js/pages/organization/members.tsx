@@ -25,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useDateFormat } from '@/lib/datetime';
 import { index } from '@/routes/organization/members';
 
 type Member = {
@@ -56,17 +57,8 @@ function capitalize(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function formatDate(value: string | null): string {
-    return value
-        ? new Date(value).toLocaleDateString(undefined, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-          })
-        : '—';
-}
-
 export default function Members({ members, invitations, roles }: Props) {
+    const { formatDate } = useDateFormat();
     const [inviting, setInviting] = useState(false);
     const [editing, setEditing] = useState<Member | null>(null);
     const [removing, setRemoving] = useState<Member | null>(null);

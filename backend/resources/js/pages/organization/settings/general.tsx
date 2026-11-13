@@ -128,7 +128,9 @@ export default function GeneralSettings({ settings, timezones }: Props) {
                                     ))}
                                 </datalist>
                                 <p className="text-xs text-muted-foreground">
-                                    Start typing a city or region, e.g. Dhaka.
+                                    Everyone in this organization sees and
+                                    enters dates in this timezone. Start typing
+                                    a city or region, e.g. Dhaka.
                                 </p>
                                 <InputError message={errors.timezone} />
                             </div>

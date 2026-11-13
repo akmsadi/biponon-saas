@@ -53,6 +53,8 @@ class HandleInertiaRequests extends Middleware
                 'currentOrganizationId' => fn () => $request->session()->get('current_organization_id'),
                 'can' => fn () => $this->permissions($request),
             ],
+            // Organization pages show and enter dates in the organization's timezone; elsewhere the browser's.
+            'organizationTimezone' => fn () => $request->attributes->get('organization')?->setting('timezone'),
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'canRegister' => Features::enabled(Features::registration()),

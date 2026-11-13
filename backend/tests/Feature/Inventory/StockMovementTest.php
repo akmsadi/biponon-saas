@@ -152,17 +152,25 @@ class StockMovementTest extends TestCase
                 ->where('movements.data.0.direction', 'in'));
     }
 
-    public function test_date_bounds_are_whole_days_in_the_viewers_timezone(): void
+    public function test_date_bounds_are_whole_days_in_the_organizations_timezone(): void
     {
-        // 20:00 UTC on the 10th is 02:00 on the 11th in Dhaka (UTC+6).
+        // 20:00 UTC on the 10th is 02:00 on the 11th in Dhaka (UTC+6), the default organization timezone.
         $lateEvening = $this->receive($this->panjabi, $this->dhaka, 1, '2026-11-10 20:00');
         $previousDay = $this->receive($this->panjabi, $this->dhaka, 1, '2026-11-09 12:00');
 
-        $this->assertSame([$lateEvening->id], $this->listedIds(['date_from' => '2026-11-10', 'date_to' => '2026-11-10']));
-        $this->assertSame([], $this->listedIds(['date_from' => '2026-11-10', 'date_to' => '2026-11-10', 'tz' => 'Asia/Dhaka']));
-        $this->assertSame([$lateEvening->id], $this->listedIds(['date_from' => '2026-11-11', 'tz' => 'Asia/Dhaka']));
+        $this->assertSame([], $this->listedIds(['date_from' => '2026-11-10', 'date_to' => '2026-11-10']));
+        $this->assertSame([$lateEvening->id], $this->listedIds(['date_from' => '2026-11-11']));
         $this->assertSame([$previousDay->id], $this->listedIds(['date_to' => '2026-11-09']));
-        $this->assertSame([$lateEvening->id, $previousDay->id], $this->listedIds(['date_from' => 'not-a-date', 'tz' => 'Not/AZone']));
+        $this->assertSame([$lateEvening->id, $previousDay->id], $this->listedIds(['date_from' => 'not-a-date']));
+
+        // A timezone sent by the browser is ignored.
+        $this->assertSame([], $this->listedIds(['date_from' => '2026-11-10', 'date_to' => '2026-11-10', 'tz' => 'UTC']));
+
+        $this->organization->putSettings(['timezone' => 'UTC']);
+        $this->organization->save();
+        $this->user = $this->user->fresh();
+
+        $this->assertSame([$lateEvening->id], $this->listedIds(['date_from' => '2026-11-10', 'date_to' => '2026-11-10']));
     }
 
     public function test_export_downloads_the_filtered_movements_as_csv(): void
@@ -179,7 +187,7 @@ class StockMovementTest extends TestCase
         StockMovement::factory()->create();
 
         $response = $this->actingAs($this->user)
-            ->get(route('inventory.movements.export', ['search' => 'panjabi', 'tz' => 'Asia/Dhaka']))
+            ->get(route('inventory.movements.export', ['search' => 'panjabi']))
             ->assertOk()
             ->assertDownload();
 

@@ -72,6 +72,21 @@ class SettingsTest extends TestCase
         $this->assertSame('Europe/London', $organization->setting('timezone'));
     }
 
+    public function test_organization_pages_receive_the_organizations_timezone(): void
+    {
+        $this->organization->putSettings(['timezone' => 'Europe/London']);
+        $this->organization->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationTimezone', 'Europe/London'));
+
+        // Pages outside an organization fall back to the browser's timezone.
+        $this->actingAs($this->admin)
+            ->get(route('profile.edit'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationTimezone', null));
+    }
+
     public function test_the_timezone_must_be_a_real_zone(): void
     {
         $this->actingAs($this->admin)
