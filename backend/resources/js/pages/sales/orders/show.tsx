@@ -4,6 +4,7 @@ import {
     CircleCheck,
     CircleStop,
     PackageMinus,
+    PackagePlus,
     Pencil,
     Trash2,
 } from 'lucide-react';
@@ -13,6 +14,7 @@ import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
 import SalesOrderStatusBadge from '@/components/sales-order-status';
 import type { SalesOrderStatus } from '@/components/sales-order-status';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -28,6 +30,7 @@ import { useMoneyFormat } from '@/lib/money';
 import { show as showProduct } from '@/routes/catalog/products';
 import { edit, index } from '@/routes/sales/orders';
 import { create as dispatch } from '@/routes/sales/orders/dispatch';
+import { create as takeReturn } from '@/routes/sales/orders/return';
 
 type Line = {
     id: number;
@@ -38,6 +41,7 @@ type Line = {
     hex_code: string | null;
     quantity_ordered: number;
     quantity_dispatched: number;
+    quantity_returned: number;
     unit_price: string;
     total_price: string;
     in_stock_here?: number;
@@ -66,12 +70,14 @@ type Order = {
     closed_at: string | null;
     units_ordered: number;
     units_dispatched: number;
+    units_returned: number;
     total_price: string;
     lines: Line[];
 };
 
-type Dispatch = {
+type HistoryEntry = {
     id: number;
+    type: 'dispatch' | 'return';
     occurred_at: string;
     product: string;
     sku: string;
@@ -84,9 +90,10 @@ type Dispatch = {
 
 type Props = {
     order: Order;
-    dispatches: Dispatch[];
+    history: HistoryEntry[];
     can: {
         dispatch: boolean;
+        return: boolean;
         edit: boolean;
         delete: boolean;
         confirm: boolean;
@@ -111,7 +118,7 @@ function shortBy(line: Line): number {
     );
 }
 
-export default function SalesOrderShow({ order, dispatches, can }: Props) {
+export default function SalesOrderShow({ order, history, can }: Props) {
     const { formatDateTime } = useDateFormat();
     const { formatMoney } = useMoneyFormat();
     const [confirming, setConfirming] = useState<Confirming>(null);
@@ -119,6 +126,7 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
         (line) => line.in_stock_here !== undefined,
     );
     const shortLines = order.lines.filter((line) => shortBy(line) > 0);
+    const showsReturns = order.units_returned > 0;
 
     return (
         <>
@@ -177,6 +185,13 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                             <Button asChild>
                                 <Link href={dispatch(order.id)}>
                                     <PackageMinus /> Dispatch
+                                </Link>
+                            </Button>
+                        )}
+                        {can.return && (
+                            <Button variant="outline" asChild>
+                                <Link href={takeReturn(order.id)}>
+                                    <PackagePlus /> Record return
                                 </Link>
                             </Button>
                         )}
@@ -315,6 +330,11 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                 <th className="px-4 py-3 text-right font-medium">
                                     Dispatched
                                 </th>
+                                {showsReturns && (
+                                    <th className="px-4 py-3 text-right font-medium">
+                                        Returned
+                                    </th>
+                                )}
                                 {showsStock && (
                                     <th className="px-4 py-3 text-right font-medium">
                                         In stock
@@ -360,6 +380,11 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                     <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
                                         {line.quantity_dispatched}
                                     </td>
+                                    {showsReturns && (
+                                        <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                            {line.quantity_returned}
+                                        </td>
+                                    )}
                                     {showsStock && (
                                         <td className="px-4 py-3 text-right tabular-nums">
                                             <span
@@ -397,6 +422,11 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                 <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
                                     {order.units_dispatched}
                                 </td>
+                                {showsReturns && (
+                                    <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                        {order.units_returned}
+                                    </td>
+                                )}
                                 {showsStock && <td />}
                                 <td />
                                 <td className="px-4 py-3 text-right tabular-nums">
@@ -407,9 +437,11 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                     </table>
                 </div>
 
-                {dispatches.length > 0 && (
+                {history.length > 0 && (
                     <section className="max-w-4xl space-y-3">
-                        <h2 className="text-base font-semibold">Dispatches</h2>
+                        <h2 className="text-base font-semibold">
+                            Dispatches and returns
+                        </h2>
                         <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                             <table className="w-full text-sm">
                                 <thead className="border-b bg-muted/50 text-left text-muted-foreground">
@@ -418,10 +450,13 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                             Date
                                         </th>
                                         <th className="px-4 py-3 font-medium">
+                                            Type
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
                                             Product
                                         </th>
                                         <th className="px-4 py-3 font-medium">
-                                            From
+                                            Warehouse
                                         </th>
                                         <th className="px-4 py-3 text-right font-medium">
                                             Qty
@@ -435,7 +470,7 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {dispatches.map((sent) => (
+                                    {history.map((sent) => (
                                         <tr
                                             key={sent.id}
                                             className="border-b align-top last:border-0"
@@ -444,6 +479,19 @@ export default function SalesOrderShow({ order, dispatches, can }: Props) {
                                                 {formatDateTime(
                                                     sent.occurred_at,
                                                 )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <Badge
+                                                    variant={
+                                                        sent.type === 'return'
+                                                            ? 'outline'
+                                                            : 'secondary'
+                                                    }
+                                                >
+                                                    {sent.type === 'return'
+                                                        ? 'Return'
+                                                        : 'Dispatch'}
+                                                </Badge>
                                             </td>
                                             <td className="px-4 py-3">
                                                 {sent.product}

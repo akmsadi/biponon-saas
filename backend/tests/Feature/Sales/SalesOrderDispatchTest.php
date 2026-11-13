@@ -199,10 +199,11 @@ class SalesOrderDispatchTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('sales.orders.show', $this->order))
             ->assertInertia(fn (Assert $page) => $page
-                ->has('dispatches', 1)
-                ->where('dispatches.0.quantity', 3)
-                ->where('dispatches.0.warehouse.code', $this->annex->code)
-                ->where('dispatches.0.notes', 'Courier 77')
+                ->has('history', 1)
+                ->where('history.0.type', 'dispatch')
+                ->where('history.0.quantity', 3)
+                ->where('history.0.warehouse.code', $this->annex->code)
+                ->where('history.0.notes', 'Courier 77')
                 ->where('can.dispatch', true));
 
         $this->actingAs($this->member)

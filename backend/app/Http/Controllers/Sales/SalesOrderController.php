@@ -162,6 +162,7 @@ class SalesOrderController extends Controller
                 'closed_at' => $salesOrder->closed_at?->toIso8601String(),
                 'units_ordered' => $lines->sum('quantity_ordered'),
                 'units_dispatched' => $lines->sum('quantity_dispatched'),
+                'units_returned' => $lines->sum('quantity_returned'),
                 'total_price' => $this->money($lines->sum(fn (SalesOrderLine $line): int => $line->totalCents())),
                 'lines' => $lines->map(fn (SalesOrderLine $line): array => [
                     'id' => $line->id,
@@ -172,6 +173,7 @@ class SalesOrderController extends Controller
                     'hex_code' => $line->productVariant->color->hex_code,
                     'quantity_ordered' => $line->quantity_ordered,
                     'quantity_dispatched' => $line->quantity_dispatched,
+                    'quantity_returned' => $line->quantity_returned,
                     'unit_price' => $line->unit_price,
                     'total_price' => $this->money($line->totalCents()),
                     // Stock is only worth showing while the order still has something to send.
@@ -181,9 +183,10 @@ class SalesOrderController extends Controller
                     ] : []),
                 ]),
             ],
-            'dispatches' => $this->dispatches($lines),
+            'history' => $this->history($lines),
             'can' => [
                 'dispatch' => $salesOrder->canDispatch(),
+                'return' => $salesOrder->canReturn() && $lines->contains(fn (SalesOrderLine $line): bool => $line->quantityReturnable() > 0),
                 'edit' => $salesOrder->isDraft(),
                 'delete' => $salesOrder->isDraft(),
                 'confirm' => $salesOrder->isDraft() && $this->roleIncludes($request, 'manager'),
@@ -395,28 +398,29 @@ class SalesOrderController extends Controller
     }
 
     /**
-     * The dispatch movements of the order's lines, newest first.
+     * The dispatch and return movements of the order's lines, newest first.
      *
      * @param  Collection<int, SalesOrderLine>  $lines  the order's lines with their variants loaded
      * @return list<array<string, mixed>>
      */
-    private function dispatches(Collection $lines): array
+    private function history(Collection $lines): array
     {
         $variants = $lines->pluck('productVariant', 'id');
 
         return StockMovement::query()
             ->whereIn('sales_order_line_id', $lines->pluck('id'))
-            ->with(['fromWarehouse:id,name,code', 'performedBy:id,name'])
+            ->with(['fromWarehouse:id,name,code', 'toWarehouse:id,name,code', 'performedBy:id,name'])
             ->withCount('serialNumbers')
             ->orderByDesc('occurred_at')
             ->orderByDesc('id')
             ->get()
             ->map(fn (StockMovement $movement): array => [
                 'id' => $movement->id,
+                'type' => $movement->movement_type,
                 'occurred_at' => $movement->occurred_at->toIso8601String(),
                 'product' => $variants[$movement->sales_order_line_id]->product->name,
                 'sku' => $variants[$movement->sales_order_line_id]->sku,
-                'warehouse' => $movement->fromWarehouse->only(['name', 'code']),
+                'warehouse' => ($movement->fromWarehouse ?? $movement->toWarehouse)->only(['name', 'code']),
                 'quantity' => $movement->quantity,
                 'serial_count' => $movement->serial_numbers_count,
                 'performed_by' => $movement->performedBy?->name,

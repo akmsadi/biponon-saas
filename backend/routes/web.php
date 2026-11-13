@@ -25,6 +25,7 @@ use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesOrderDispatchController;
+use App\Http\Controllers\Sales\SalesOrderReturnController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -81,7 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });
 
-        // Everyone drafts sales orders and dispatches against them; managers and admins confirm, cancel and close them.
+        // Everyone drafts sales orders and dispatches and takes returns against them; managers and admins confirm, cancel and close them.
         Route::prefix('sales')->name('sales.')->group(function () {
             Route::resource('orders', SalesOrderController::class)->parameters(['orders' => 'salesOrder']);
             Route::post('orders/{salesOrder}/confirm', [SalesOrderController::class, 'confirm'])->middleware('role:manager')->name('orders.confirm');
@@ -89,6 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('orders/{salesOrder}/close', [SalesOrderController::class, 'close'])->middleware('role:manager')->name('orders.close');
             Route::get('orders/{salesOrder}/dispatch', [SalesOrderDispatchController::class, 'create'])->name('orders.dispatch.create');
             Route::post('orders/{salesOrder}/dispatch', [SalesOrderDispatchController::class, 'store'])->name('orders.dispatch.store');
+            Route::get('orders/{salesOrder}/return', [SalesOrderReturnController::class, 'create'])->name('orders.return.create');
+            Route::post('orders/{salesOrder}/return', [SalesOrderReturnController::class, 'store'])->name('orders.return.store');
             Route::resource('customers', CustomerController::class)->only(['index', 'store', 'update', 'destroy'])
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });

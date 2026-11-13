@@ -66,6 +66,14 @@ class SalesOrder extends Model
     }
 
     /**
+     * Returns are taken once something was sent: partly or fully dispatched orders, and closed ones.
+     */
+    public function canReturn(): bool
+    {
+        return in_array($this->status, ['partially_dispatched', 'dispatched', 'closed'], true);
+    }
+
+    /**
      * A partly dispatched order can be closed when the rest will not be sent.
      */
     public function canBeClosed(): bool
