@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { Building2, LogOut, Settings, Check } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -10,16 +10,16 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
-import type { ActiveOrganization, User } from '@/types';
-import { update as updateCurrentOrganization } from '@/routes/current-organization';
+import type { User } from '@/types';
 
 type Props = {
     user: User;
-    activeOrganizations: ActiveOrganization[];
-    currentOrganizationId: number | null;
 };
 
-export function UserMenuContent({ user, activeOrganizations, currentOrganizationId }: Props) {
+/**
+ * The user's own menu. Switching organization lives in the sidebar's OrganizationSwitcher.
+ */
+export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {
@@ -35,28 +35,6 @@ export function UserMenuContent({ user, activeOrganizations, currentOrganization
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {activeOrganizations.length > 0 && (
-                <>
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        Organizations
-                    </DropdownMenuLabel>
-                    <DropdownMenuGroup>
-                        {activeOrganizations.map((org) => (
-                            <DropdownMenuItem
-                                key={org.id}
-                                onSelect={() => router.put(updateCurrentOrganization(), { organization_id: org.id })}
-                            >
-                                <Building2 className="mr-2" />
-                                <span className="truncate">{org.name}</span>
-                                {org.id === currentOrganizationId && <Check className="ml-auto" />}
-                            </DropdownMenuItem>
-
-                        ))}
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                </>
-            )}
-
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
