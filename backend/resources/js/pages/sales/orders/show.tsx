@@ -1,5 +1,12 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { Ban, CircleCheck, CircleStop, Pencil, Trash2 } from 'lucide-react';
+import {
+    Ban,
+    CircleCheck,
+    CircleStop,
+    PackageMinus,
+    Pencil,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import SalesOrderController from '@/actions/App/Http/Controllers/Sales/SalesOrderController';
 import ColorSwatch from '@/components/color-swatch';
@@ -20,6 +27,7 @@ import { formatDate, useDateFormat } from '@/lib/datetime';
 import { useMoneyFormat } from '@/lib/money';
 import { show as showProduct } from '@/routes/catalog/products';
 import { edit, index } from '@/routes/sales/orders';
+import { create as dispatch } from '@/routes/sales/orders/dispatch';
 
 type Line = {
     id: number;
@@ -62,9 +70,23 @@ type Order = {
     lines: Line[];
 };
 
+type Dispatch = {
+    id: number;
+    occurred_at: string;
+    product: string;
+    sku: string;
+    warehouse: { name: string; code: string };
+    quantity: number;
+    serial_count: number;
+    performed_by: string | null;
+    notes: string | null;
+};
+
 type Props = {
     order: Order;
+    dispatches: Dispatch[];
     can: {
+        dispatch: boolean;
         edit: boolean;
         delete: boolean;
         confirm: boolean;
@@ -89,7 +111,7 @@ function shortBy(line: Line): number {
     );
 }
 
-export default function SalesOrderShow({ order, can }: Props) {
+export default function SalesOrderShow({ order, dispatches, can }: Props) {
     const { formatDateTime } = useDateFormat();
     const { formatMoney } = useMoneyFormat();
     const [confirming, setConfirming] = useState<Confirming>(null);
@@ -149,6 +171,13 @@ export default function SalesOrderShow({ order, can }: Props) {
                         {can.confirm && (
                             <Button onClick={() => setConfirming('confirm')}>
                                 <CircleCheck /> Confirm order
+                            </Button>
+                        )}
+                        {can.dispatch && (
+                            <Button asChild>
+                                <Link href={dispatch(order.id)}>
+                                    <PackageMinus /> Dispatch
+                                </Link>
                             </Button>
                         )}
                     </div>
@@ -377,6 +406,78 @@ export default function SalesOrderShow({ order, can }: Props) {
                         </tfoot>
                     </table>
                 </div>
+
+                {dispatches.length > 0 && (
+                    <section className="max-w-4xl space-y-3">
+                        <h2 className="text-base font-semibold">Dispatches</h2>
+                        <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                            <table className="w-full text-sm">
+                                <thead className="border-b bg-muted/50 text-left text-muted-foreground">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium">
+                                            Date
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Product
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            From
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium">
+                                            Qty
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium">
+                                            Serials
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            By
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {dispatches.map((sent) => (
+                                        <tr
+                                            key={sent.id}
+                                            className="border-b align-top last:border-0"
+                                        >
+                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                                {formatDateTime(
+                                                    sent.occurred_at,
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {sent.product}
+                                                <div className="font-mono text-xs text-muted-foreground">
+                                                    {sent.sku}
+                                                </div>
+                                                {sent.notes && (
+                                                    <div className="mt-1 text-xs text-muted-foreground">
+                                                        {sent.notes}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td
+                                                className="px-4 py-3 font-mono text-xs"
+                                                title={sent.warehouse.name}
+                                            >
+                                                {sent.warehouse.code}
+                                            </td>
+                                            <td className="px-4 py-3 text-right tabular-nums">
+                                                {sent.quantity}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                                {sent.serial_count || '—'}
+                                            </td>
+                                            <td className="px-4 py-3 text-muted-foreground">
+                                                {sent.performed_by ?? '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
             </div>
 
             <Dialog

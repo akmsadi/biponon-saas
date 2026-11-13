@@ -70,7 +70,7 @@ class SalesOrderTest extends TestCase
                 ->where('order.units_ordered', 5)
                 ->where('order.lines.0.unit_price', '1250.50')
                 ->where('order.lines.0.total_price', '3751.50')
-                ->where('can', ['edit' => true, 'delete' => true, 'confirm' => false, 'cancel' => false, 'close' => false]));
+                ->where('can', ['dispatch' => false, 'edit' => true, 'delete' => true, 'confirm' => false, 'cancel' => false, 'close' => false]));
 
         $this->actingAs($this->member)
             ->get(route('sales.orders.index'))
