@@ -195,9 +195,10 @@ class StockMovementTest extends TestCase
 
         $this->assertCount(2, $lines);
         $this->assertSame('Date', $lines[0][0]);
+        $this->assertSame(['Unit cost', 'Reference'], [$lines[0][9], $lines[0][10]]);
         $this->assertSame(
-            ['2026-11-11 02:00', 'receive', 'Panjabi', 'PNJ-M-RED', '', 'DHK', '10', 'Rahim', 'SN-1 SN-2', '\'=HYPERLINK("http://evil")'],
-            [$lines[1][0], $lines[1][1], $lines[1][2], $lines[1][5], $lines[1][6], $lines[1][7], $lines[1][8], $lines[1][9], $lines[1][10], $lines[1][11]],
+            ['2026-11-11 02:00', 'receive', 'Panjabi', 'PNJ-M-RED', '', 'DHK', '10', '', '', 'Rahim', 'SN-1 SN-2', '\'=HYPERLINK("http://evil")'],
+            [$lines[1][0], $lines[1][1], $lines[1][2], $lines[1][5], $lines[1][6], $lines[1][7], $lines[1][8], $lines[1][9], $lines[1][10], $lines[1][11], $lines[1][12], $lines[1][13]],
         );
     }
 

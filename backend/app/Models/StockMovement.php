@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * One append-only ledger entry: a quantity of a variant moving into, out of, or between warehouses.
  */
-#[Fillable(['organization_id', 'product_variant_id', 'from_warehouse_id', 'to_warehouse_id', 'quantity', 'movement_type', 'reference_type', 'reference_id', 'performed_by', 'notes', 'occurred_at'])]
+#[Fillable(['organization_id', 'product_variant_id', 'from_warehouse_id', 'to_warehouse_id', 'quantity', 'unit_cost', 'movement_type', 'reference_type', 'reference_id', 'purchase_order_line_id', 'performed_by', 'notes', 'occurred_at'])]
 class StockMovement extends Model
 {
     /** @use HasFactory<StockMovementFactory> */
@@ -22,8 +22,17 @@ class StockMovement extends Model
     {
         return [
             'quantity' => 'integer',
+            'unit_cost' => 'decimal:2',
             'occurred_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The purchase order line this receipt filled, if it was received against an order.
+     */
+    public function purchaseOrderLine(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrderLine::class);
     }
 
     public function organization(): BelongsTo

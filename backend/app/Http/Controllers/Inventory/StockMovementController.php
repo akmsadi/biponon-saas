@@ -33,6 +33,7 @@ class StockMovementController extends Controller
     {
         $organization = $this->organization($request);
         $filters = $this->filters($request);
+        $canSeeCosts = $this->roleIncludes($request, 'manager');
 
         $movements = $this->filteredQuery($organization, $filters)
             ->withCount('serialNumbers')
@@ -53,6 +54,10 @@ class StockMovementController extends Controller
                 'performed_by' => $movement->performer_name,
                 'notes' => $movement->notes,
                 'serial_count' => $movement->serial_numbers_count,
+                'purchase_order' => $movement->purchase_order_number === null
+                    ? null
+                    : ['id' => $movement->purchase_order_id, 'number' => $movement->purchase_order_number],
+                ...($canSeeCosts ? ['unit_cost' => $movement->unit_cost] : []),
                 'occurred_at' => $movement->occurred_at->toIso8601String(),
             ]);
 
@@ -68,24 +73,31 @@ class StockMovementController extends Controller
                 'date_from' => $filters['date_from']?->toDateString(),
                 'date_to' => $filters['date_to']?->toDateString(),
             ],
+            'canSeeCosts' => $canSeeCosts,
         ]);
     }
 
     /**
      * Download every movement matching the current filters as CSV, with dates in the organization's timezone.
+     * The unit cost column is included only for managers and admins.
      */
     public function export(Request $request): StreamedResponse
     {
         $organization = $this->organization($request);
         $filters = $this->filters($request);
+        $canSeeCosts = $this->roleIncludes($request, 'manager');
         $query = $this->filteredQuery($organization, $filters)->with('serialNumbers:id,serial_number');
         $filename = 'stock-movements-'.now($filters['tz'])->format('Ymd-His').'.csv';
 
-        return response()->streamDownload(function () use ($query, $filters): void {
+        return response()->streamDownload(function () use ($query, $filters, $canSeeCosts): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\u{FEFF}"); // UTF-8 BOM so Excel reads non-ASCII names correctly.
 
-            fputcsv($output, ['Date', 'Type', 'Product', 'Size', 'Color', 'SKU', 'From', 'To', 'Quantity', 'Performed by', 'Serials', 'Notes'], escape: '');
+            fputcsv($output, [
+                'Date', 'Type', 'Product', 'Size', 'Color', 'SKU', 'From', 'To', 'Quantity',
+                ...($canSeeCosts ? ['Unit cost'] : []),
+                'Reference', 'Performed by', 'Serials', 'Notes',
+            ], escape: '');
 
             foreach ($query->lazy(500) as $movement) {
                 fputcsv($output, array_map($this->csvSafe(...), [
@@ -98,6 +110,8 @@ class StockMovementController extends Controller
                     $movement->from_code ?? '',
                     $movement->to_code ?? '',
                     $movement->quantity,
+                    ...($canSeeCosts ? [$movement->unit_cost ?? ''] : []),
+                    $movement->purchase_order_number ?? '',
                     $movement->performer_name ?? '',
                     $movement->serialNumbers->pluck('serial_number')->implode(' '),
                     $movement->notes ?? '',
@@ -174,6 +188,8 @@ class StockMovementController extends Controller
             ->leftJoin('warehouses as from_warehouses', 'from_warehouses.id', '=', 'stock_movements.from_warehouse_id')
             ->leftJoin('warehouses as to_warehouses', 'to_warehouses.id', '=', 'stock_movements.to_warehouse_id')
             ->leftJoin('users as performers', 'performers.id', '=', 'stock_movements.performed_by')
+            ->leftJoin('purchase_order_lines', 'purchase_order_lines.id', '=', 'stock_movements.purchase_order_line_id')
+            ->leftJoin('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_lines.purchase_order_id')
             ->when($filters['type'], fn (Builder $query, string $type) => $query->where('stock_movements.movement_type', $type))
             ->when($filters['product'], fn (Builder $query, int $productId) => $query->where('products.id', $productId))
             ->when($filters['warehouse'], fn (Builder $query, int $warehouseId) => $query->where(fn (Builder $query) => $query
@@ -183,13 +199,15 @@ class StockMovementController extends Controller
             ->when($filters['date_to'], fn (Builder $query, Carbon $to) => $query->where('stock_movements.occurred_at', '<=', $to->copy()->utc()))
             ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('products.name', 'like', '%'.$filters['search'].'%')
-                ->orWhere('product_variants.sku', 'like', '%'.$filters['search'].'%')))
+                ->orWhere('product_variants.sku', 'like', '%'.$filters['search'].'%')
+                ->orWhere('purchase_orders.number', 'like', '%'.$filters['search'].'%')))
             ->orderByDesc('stock_movements.occurred_at')
             ->orderByDesc('stock_movements.id')
             ->select([
                 'stock_movements.id',
                 'stock_movements.movement_type',
                 'stock_movements.quantity',
+                'stock_movements.unit_cost',
                 'stock_movements.from_warehouse_id',
                 'stock_movements.to_warehouse_id',
                 'stock_movements.notes',
@@ -205,6 +223,8 @@ class StockMovementController extends Controller
                 'to_warehouses.name as to_name',
                 'to_warehouses.code as to_code',
                 'performers.name as performer_name',
+                'purchase_orders.id as purchase_order_id',
+                'purchase_orders.number as purchase_order_number',
             ]);
     }
 

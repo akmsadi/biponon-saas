@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Operations;
 
+use App\Concerns\ValidatesNewSerialNumbers;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -18,6 +19,8 @@ use Illuminate\Validation\Validator;
  */
 class ReceiveStockRequest extends FormRequest
 {
+    use ValidatesNewSerialNumbers;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -81,41 +84,13 @@ class ReceiveStockRequest extends FormRequest
                     return;
                 }
 
-                /** @var array<string, int> $seen line index keyed by lower-cased serial */
-                $seen = [];
+                $groups = [];
 
                 foreach ($this->input('lines', []) as $index => $line) {
-                    $serials = $line['serials'] ?? [];
-
-                    if ($serials === []) {
-                        continue;
-                    }
-
-                    if (count($serials) !== (int) $line['quantity']) {
-                        $validator->errors()->add("lines.{$index}.serials", __('Enter exactly :quantity serial numbers (one per unit), or none. You entered :count.', [
-                            'quantity' => $line['quantity'],
-                            'count' => count($serials),
-                        ]));
-                    }
-
-                    $repeated = [];
-
-                    foreach ($serials as $serial) {
-                        $key = mb_strtolower($serial);
-
-                        if (isset($seen[$key])) {
-                            $repeated[] = $serial;
-                        }
-
-                        $seen[$key] = $index;
-                    }
-
-                    if ($repeated !== []) {
-                        $validator->errors()->add("lines.{$index}.serials", __('Repeated in this receipt: :serials', ['serials' => implode(', ', $repeated)]));
-                    }
+                    $groups["lines.{$index}.serials"] = ['quantity' => (int) $line['quantity'], 'serials' => $line['serials'] ?? []];
                 }
 
-                $this->rejectKnownSerials($validator, $seen);
+                $this->validateNewSerials($validator, $this->currentOrganization(), $groups);
             },
         ];
     }
@@ -134,41 +109,12 @@ class ReceiveStockRequest extends FormRequest
         $this->merge([
             'lines' => array_map(function (mixed $line): mixed {
                 if (is_array($line) && is_string($line['serials'] ?? null)) {
-                    $line['serials'] = array_values(array_filter(
-                        array_map('trim', preg_split('/\r\n|\r|\n/', $line['serials'])),
-                        fn (string $serial): bool => $serial !== '',
-                    ));
+                    $line['serials'] = self::splitSerials($line['serials']);
                 }
 
                 return $line;
             }, $lines),
         ]);
-    }
-
-    /**
-     * @param  array<string, int>  $seen  line index keyed by lower-cased serial
-     */
-    private function rejectKnownSerials(Validator $validator, array $seen): void
-    {
-        if ($seen === []) {
-            return;
-        }
-
-        $serialsByLine = [];
-
-        foreach ($this->input('lines') as $index => $line) {
-            foreach ($line['serials'] ?? [] as $serial) {
-                $serialsByLine[$serial] = $index;
-            }
-        }
-
-        $known = $this->currentOrganization()->serialNumbers()
-            ->whereIn('serial_number', array_keys($serialsByLine))
-            ->pluck('serial_number');
-
-        foreach ($known->groupBy(fn (string $serial): int => $serialsByLine[$serial] ?? $seen[mb_strtolower($serial)]) as $index => $serials) {
-            $validator->errors()->add("lines.{$index}.serials", __('Already exist: :serials', ['serials' => $serials->implode(', ')]));
-        }
     }
 
     private function currentOrganization(): Organization

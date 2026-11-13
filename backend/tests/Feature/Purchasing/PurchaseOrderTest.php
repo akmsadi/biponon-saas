@@ -72,7 +72,7 @@ class PurchaseOrderTest extends TestCase
                 ->where('order.units_ordered', 110)
                 ->where('order.lines.0.unit_cost', '850.50')
                 ->where('order.lines.0.total_cost', '85050.00')
-                ->where('can', ['edit' => true, 'delete' => true, 'place' => true, 'cancel' => true]));
+                ->where('can', ['edit' => true, 'delete' => true, 'place' => true, 'cancel' => true, 'receive' => false, 'close' => false]));
     }
 
     public function test_numbers_continue_per_organization(): void
@@ -113,7 +113,7 @@ class PurchaseOrderTest extends TestCase
                 ->missing('order.total_cost')
                 ->missing('order.lines.0.unit_cost')
                 ->missing('order.lines.0.total_cost')
-                ->where('can', ['edit' => true, 'delete' => true, 'place' => false, 'cancel' => false]));
+                ->where('can', ['edit' => true, 'delete' => true, 'place' => false, 'cancel' => false, 'receive' => false, 'close' => false]));
 
         $this->actingAs($this->member)
             ->get(route('purchasing.orders.edit', $order))

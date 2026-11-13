@@ -24,8 +24,10 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { useDateFormat } from '@/lib/datetime';
+import { useMoneyFormat } from '@/lib/money';
 import { show as showProduct } from '@/routes/catalog/products';
 import { exportMethod, index, serials } from '@/routes/inventory/movements';
+import { show as showPurchaseOrder } from '@/routes/purchasing/orders';
 
 type Warehouse = { name: string; code: string };
 
@@ -44,6 +46,8 @@ type Movement = {
     performed_by: string | null;
     notes: string | null;
     serial_count: number;
+    purchase_order: { id: number; number: string } | null;
+    unit_cost?: string | null;
     occurred_at: string;
 };
 
@@ -62,6 +66,7 @@ type Props = {
     types: string[];
     product: { id: number; name: string } | null;
     filters: Filters;
+    canSeeCosts: boolean;
 };
 
 type SerialRow = { id: number; serial_number: string; status: string };
@@ -118,8 +123,10 @@ export default function StockMovements({
     types,
     product,
     filters,
+    canSeeCosts,
 }: Props) {
     const { formatDateTime } = useDateFormat();
+    const { formatMoney } = useMoneyFormat();
     const [search, setSearch] = useState(filters.search);
     const [viewingSerials, setViewingSerials] = useState<Movement | null>(null);
     const isFirstRender = useRef(true);
@@ -174,8 +181,8 @@ export default function StockMovements({
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search product or SKU"
-                            aria-label="Search product or SKU"
+                            placeholder="Search product, SKU or PO number"
+                            aria-label="Search product, SKU or PO number"
                             maxLength={100}
                             className="pl-9"
                         />
@@ -330,6 +337,11 @@ export default function StockMovements({
                                 <th className="px-4 py-3 text-right font-medium">
                                     Qty
                                 </th>
+                                {canSeeCosts && (
+                                    <th className="px-4 py-3 text-right font-medium">
+                                        Unit cost
+                                    </th>
+                                )}
                                 <th className="px-4 py-3 font-medium">By</th>
                                 <th className="px-4 py-3 font-medium">
                                     Serials
@@ -341,7 +353,7 @@ export default function StockMovements({
                             {movements.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={9}
+                                        colSpan={canSeeCosts ? 10 : 9}
                                         className="px-4 py-10 text-center text-muted-foreground"
                                     >
                                         {isFiltered
@@ -362,6 +374,16 @@ export default function StockMovements({
                                         <Badge variant="secondary">
                                             {humanize(movement.movement_type)}
                                         </Badge>
+                                        {movement.purchase_order && (
+                                            <Link
+                                                href={showPurchaseOrder(
+                                                    movement.purchase_order.id,
+                                                )}
+                                                className="mt-1 block font-mono text-xs text-muted-foreground hover:underline"
+                                            >
+                                                {movement.purchase_order.number}
+                                            </Link>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <Link
@@ -400,6 +422,13 @@ export default function StockMovements({
                                         {movement.direction === 'out' && '−'}
                                         {movement.quantity}
                                     </td>
+                                    {canSeeCosts && (
+                                        <td className="px-4 py-3 text-right whitespace-nowrap text-muted-foreground tabular-nums">
+                                            {formatMoney(
+                                                movement.unit_cost ?? null,
+                                            )}
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-muted-foreground">
                                         {movement.performed_by ?? '—'}
                                     </td>

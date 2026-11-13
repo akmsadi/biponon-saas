@@ -1,5 +1,12 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { Ban, Pencil, Send, Trash2 } from 'lucide-react';
+import {
+    Ban,
+    CircleStop,
+    PackagePlus,
+    Pencil,
+    Send,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import PurchaseOrderController from '@/actions/App/Http/Controllers/Purchasing/PurchaseOrderController';
 import ColorSwatch from '@/components/color-swatch';
@@ -20,6 +27,7 @@ import { formatDate, useDateFormat } from '@/lib/datetime';
 import { useMoneyFormat } from '@/lib/money';
 import { show as showProduct } from '@/routes/catalog/products';
 import { edit, index } from '@/routes/purchasing/orders';
+import { create as receive } from '@/routes/purchasing/orders/receive';
 
 type Line = {
     id: number;
@@ -52,6 +60,7 @@ type Order = {
     created_at: string;
     ordered_at: string | null;
     cancelled_at: string | null;
+    closed_at: string | null;
     units_ordered: number;
     units_received: number;
     total_cost?: string | null;
@@ -59,15 +68,40 @@ type Order = {
     lines: Line[];
 };
 
+type Receipt = {
+    id: number;
+    occurred_at: string;
+    product: string;
+    sku: string;
+    warehouse: { name: string; code: string };
+    quantity: number;
+    serial_count: number;
+    performed_by: string | null;
+    notes: string | null;
+};
+
 type Props = {
     order: Order;
-    can: { edit: boolean; delete: boolean; place: boolean; cancel: boolean };
+    receipts: Receipt[];
+    can: {
+        edit: boolean;
+        delete: boolean;
+        place: boolean;
+        cancel: boolean;
+        receive: boolean;
+        close: boolean;
+    };
     canSeeCosts: boolean;
 };
 
-type Confirming = 'place' | 'cancel' | 'delete' | null;
+type Confirming = 'place' | 'cancel' | 'close' | 'delete' | null;
 
-export default function PurchaseOrderShow({ order, can, canSeeCosts }: Props) {
+export default function PurchaseOrderShow({
+    order,
+    receipts,
+    can,
+    canSeeCosts,
+}: Props) {
     const { formatDateTime } = useDateFormat();
     const { formatMoney } = useMoneyFormat();
     const [confirming, setConfirming] = useState<Confirming>(null);
@@ -112,9 +146,24 @@ export default function PurchaseOrderShow({ order, can, canSeeCosts }: Props) {
                                 <Ban /> Cancel order
                             </Button>
                         )}
+                        {can.close && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setConfirming('close')}
+                            >
+                                <CircleStop /> Close order
+                            </Button>
+                        )}
                         {can.place && (
                             <Button onClick={() => setConfirming('place')}>
                                 <Send /> Mark as ordered
+                            </Button>
+                        )}
+                        {can.receive && (
+                            <Button asChild>
+                                <Link href={receive(order.id)}>
+                                    <PackagePlus /> Receive
+                                </Link>
                             </Button>
                         )}
                     </div>
@@ -190,6 +239,16 @@ export default function PurchaseOrderShow({ order, can, canSeeCosts }: Props) {
                                         </dt>
                                         <dd>
                                             {formatDateTime(order.ordered_at)}
+                                        </dd>
+                                    </>
+                                )}
+                                {order.closed_at && (
+                                    <>
+                                        <dt className="text-muted-foreground">
+                                            Closed
+                                        </dt>
+                                        <dd>
+                                            {formatDateTime(order.closed_at)}
                                         </dd>
                                     </>
                                 )}
@@ -321,6 +380,78 @@ export default function PurchaseOrderShow({ order, can, canSeeCosts }: Props) {
                         the lines that do.
                     </p>
                 )}
+
+                {receipts.length > 0 && (
+                    <section className="max-w-4xl space-y-3">
+                        <h2 className="text-base font-semibold">Receipts</h2>
+                        <div className="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+                            <table className="w-full text-sm">
+                                <thead className="border-b bg-muted/50 text-left text-muted-foreground">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium">
+                                            Date
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Product
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            Into
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium">
+                                            Qty
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium">
+                                            Serials
+                                        </th>
+                                        <th className="px-4 py-3 font-medium">
+                                            By
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {receipts.map((receipt) => (
+                                        <tr
+                                            key={receipt.id}
+                                            className="border-b align-top last:border-0"
+                                        >
+                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                                {formatDateTime(
+                                                    receipt.occurred_at,
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {receipt.product}
+                                                <div className="font-mono text-xs text-muted-foreground">
+                                                    {receipt.sku}
+                                                </div>
+                                                {receipt.notes && (
+                                                    <div className="mt-1 text-xs text-muted-foreground">
+                                                        {receipt.notes}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td
+                                                className="px-4 py-3 font-mono text-xs"
+                                                title={receipt.warehouse.name}
+                                            >
+                                                {receipt.warehouse.code}
+                                            </td>
+                                            <td className="px-4 py-3 text-right tabular-nums">
+                                                {receipt.quantity}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                                {receipt.serial_count || '—'}
+                                            </td>
+                                            <td className="px-4 py-3 text-muted-foreground">
+                                                {receipt.performed_by ?? '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
             </div>
 
             <Dialog
@@ -348,6 +479,15 @@ export default function PurchaseOrderShow({ order, can, canSeeCosts }: Props) {
                             form={PurchaseOrderController.cancel.form(order.id)}
                             label="Cancel order"
                             destructive
+                            onDone={() => setConfirming(null)}
+                        />
+                    )}
+                    {confirming === 'close' && (
+                        <ConfirmAction
+                            title={`Close ${order.number}?`}
+                            description={`Do this when ${order.supplier.name} won't send the rest. The ${order.units_received} of ${order.units_ordered} units that arrived stay in stock, and nothing more can be received against this order.`}
+                            form={PurchaseOrderController.close.form(order.id)}
+                            label="Close order"
                             onDone={() => setConfirming(null)}
                         />
                     )}
