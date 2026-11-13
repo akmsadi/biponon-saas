@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeftRight,
     Boxes,
+    Building2,
     LayoutGrid,
     Settings,
     Tags,
@@ -22,6 +23,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as adminOrganizationsIndex } from '@/routes/admin/organizations';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as productsIndex } from '@/routes/catalog/products';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
@@ -80,18 +82,31 @@ const adminNavItems: SidebarNavItem[] = [
     },
 ];
 
+// Only super-admins administer the platform.
+const platformNavItems: SidebarNavItem[] = [
+    {
+        title: 'Platform',
+        icon: Building2,
+        items: [{ title: 'Organizations', href: adminOrganizationsIndex() }],
+    },
+];
+
 const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage().props;
 
-    const navItems = auth.can.manageMembers
-        ? [
-              ...mainNavItems.slice(0, -1),
-              ...adminNavItems,
-              ...mainNavItems.slice(-1),
-          ]
-        : mainNavItems;
+    const settingsItem = mainNavItems.slice(-1);
+    // Without an organization (e.g. a super-admin who belongs to none) the organization pages only redirect away.
+    const organizationItems =
+        auth.activeOrganizations.length > 0 ? mainNavItems.slice(0, -1) : [];
+
+    const navItems = [
+        ...organizationItems,
+        ...(auth.can.manageMembers ? adminNavItems : []),
+        ...(auth.can.administerPlatform ? platformNavItems : []),
+        ...settingsItem,
+    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

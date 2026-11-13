@@ -48,6 +48,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user is a platform super-admin.
+     */
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_super_admin' => true,
+        ]);
+    }
+
+    /**
      * Attach the user to an organization as an active member.
      */
     public function withOrganization(?Organization $organization = null, string $role = 'admin'): static

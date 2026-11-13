@@ -32,6 +32,11 @@ class Organization extends Model
     public const ROLES = ['admin', 'manager', 'member'];
 
     /**
+     * A suspended organization is hidden from all its members until a super-admin reactivates it.
+     */
+    public const STATUSES = ['active', 'suspended'];
+
+    /**
      * Whether a role includes everything the minimum role may do (admin > manager > member).
      */
     public static function roleIncludes(?string $role, string $minimum): bool
@@ -51,11 +56,15 @@ class Organization extends Model
      */
     public function hasAdmin(User $user): bool
     {
-        return $this->users()
-            ->whereKey($user->id)
-            ->wherePivot('role', 'admin')
-            ->wherePivot('status', 'active')
-            ->exists();
+        return $this->admins()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Active members with the admin role.
+     */
+    public function admins(): BelongsToMany
+    {
+        return $this->users()->wherePivot('role', 'admin')->wherePivot('status', 'active');
     }
 
     public function colors(): HasMany

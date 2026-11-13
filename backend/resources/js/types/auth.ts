@@ -18,13 +18,15 @@ export type ActiveOrganization = {
 };
 
 /**
- * What the user may do in the current organization (all false outside organization pages).
+ * What the user may do in the current organization (all false outside organization pages), plus whether they
+ * administer the platform (super-admin, independent of any organization).
  */
 export type Permissions = {
     runOperations: boolean;
     manageCatalog: boolean;
     manageWarehouses: boolean;
     manageMembers: boolean;
+    administerPlatform: boolean;
 };
 
 export type Auth = {

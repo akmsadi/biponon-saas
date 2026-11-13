@@ -24,7 +24,10 @@ class SetCurrentOrganization
         if ($organization === null) {
             abort_if($request->expectsJson(), 403, 'You are not a member of any active organization.');
 
-            return redirect()->route('no-organization');
+            // Super-admins usually belong to no organization; their home is the platform admin area.
+            return $request->user()->isSuperAdmin()
+                ? redirect()->route('admin.organizations.index')
+                : redirect()->route('no-organization');
         }
 
         if ($organization->id !== $sessionOrganizationId) {

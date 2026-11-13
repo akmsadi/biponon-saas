@@ -18,6 +18,10 @@ class NoOrganizationController extends Controller
             return to_route('dashboard');
         }
 
+        if ($request->user()->isSuperAdmin()) {
+            return to_route('admin.organizations.index');
+        }
+
         return Inertia::render('auth/no-organization');
     }
 }

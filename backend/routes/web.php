@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Catalog\ColorController;
 use App\Http\Controllers\Catalog\ProductController;
 use App\Http\Controllers\Catalog\ProductVariantController;
@@ -33,6 +34,14 @@ Route::post('invitations/{token}/accept', [InvitationAcceptanceController::class
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('current-organization', [CurrentOrganizationController::class, 'update'])->name('current-organization.update');
     Route::get('no-organization', NoOrganizationController::class)->name('no-organization');
+
+    // Platform administration: super-admins create and suspend organizations without belonging to them.
+    Route::prefix('admin')->name('admin.')->middleware('can:super-admin')->group(function () {
+        Route::resource('organizations', AdminOrganizationController::class)->only(['index', 'store', 'update']);
+        Route::post('organizations/{organization}/admin-invitation', [AdminOrganizationController::class, 'inviteAdmin'])
+            ->middleware('throttle:20,1')
+            ->name('organizations.admin-invitation');
+    });
 
     // Everything that shows organization data goes in here
     Route::middleware('organization')->group(function () {
