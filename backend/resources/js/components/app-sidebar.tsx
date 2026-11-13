@@ -2,7 +2,6 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeftRight,
     Boxes,
-    Building2,
     LayoutGrid,
     Settings,
     Tags,
@@ -24,7 +23,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as adminOrganizationsIndex } from '@/routes/admin/organizations';
 import { index as colorsIndex } from '@/routes/catalog/colors';
 import { index as productsIndex } from '@/routes/catalog/products';
 import { index as sizesIndex } from '@/routes/catalog/sizes';
@@ -89,15 +87,6 @@ const adminNavItems: SidebarNavItem[] = [
     },
 ];
 
-// Only super-admins administer the platform.
-const platformNavItems: SidebarNavItem[] = [
-    {
-        title: 'Platform',
-        icon: Building2,
-        items: [{ title: 'Organizations', href: adminOrganizationsIndex() }],
-    },
-];
-
 const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
@@ -112,11 +101,6 @@ export function AppSidebar() {
                   settingsNavItem,
               ]
             : [];
-
-    const navItems = [
-        ...organizationItems,
-        ...(auth.can.administerPlatform ? platformNavItems : []),
-    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -134,7 +118,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navItems} />
+                {organizationItems.length > 0 && (
+                    <NavMain items={organizationItems} />
+                )}
             </SidebarContent>
 
             <SidebarFooter>
