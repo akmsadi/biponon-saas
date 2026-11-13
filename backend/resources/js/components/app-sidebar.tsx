@@ -5,6 +5,7 @@ import {
     LayoutGrid,
     Settings,
     ShoppingCart,
+    Store,
     Tags,
     Users,
     Warehouse,
@@ -37,6 +38,7 @@ import { index as membersIndex } from '@/routes/organization/members';
 import { index as organizationSettings } from '@/routes/organization/settings';
 import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
+import { index as customersIndex } from '@/routes/sales/customers';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
@@ -69,6 +71,11 @@ const mainNavItems: SidebarNavItem[] = [
             { title: 'Purchase orders', href: purchaseOrdersIndex() },
             { title: 'Suppliers', href: suppliersIndex() },
         ],
+    },
+    {
+        title: 'Sales',
+        icon: Store,
+        items: [{ title: 'Customers', href: customersIndex() }],
     },
     {
         title: 'Operations',
