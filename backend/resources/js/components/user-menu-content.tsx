@@ -1,5 +1,5 @@
-import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { Building2, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,18 +9,32 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
+import { index as adminOrganizationsIndex } from '@/routes/admin/organizations';
 import { edit } from '@/routes/profile';
-import type { User } from '@/types';
+import type { NavItem, User } from '@/types';
 
 type Props = {
     user: User;
 };
 
 /**
- * The user's own menu. Switching organization lives in the sidebar's OrganizationSwitcher.
+ * Platform administration pages, shown to super-admins only. Add new super-admin pages here.
+ */
+const platformItems: NavItem[] = [
+    {
+        title: 'Organizations',
+        href: adminOrganizationsIndex(),
+        icon: Building2,
+    },
+];
+
+/**
+ * The user's own menu, plus platform administration for super-admins. Switching organization lives in the
+ * sidebar's OrganizationSwitcher.
  */
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
+    const { can } = usePage().props.auth;
 
     const handleLogout = () => {
         cleanup();
@@ -35,6 +49,28 @@ export function UserMenuContent({ user }: Props) {
                 </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {can.administerPlatform && (
+                <>
+                    <DropdownMenuGroup>
+                        {platformItems.map((item) => (
+                            <DropdownMenuItem key={item.title} asChild>
+                                <Link
+                                    className="block w-full cursor-pointer"
+                                    href={item.href}
+                                    prefetch
+                                    onClick={cleanup}
+                                >
+                                    {item.icon && (
+                                        <item.icon className="mr-2" />
+                                    )}
+                                    {item.title}
+                                </Link>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                </>
+            )}
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
                     <Link
