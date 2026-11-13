@@ -19,6 +19,7 @@ use App\Http\Controllers\Operations\TransferStockController;
 use App\Http\Controllers\Organization\InvitationController;
 use App\Http\Controllers\Organization\MemberController;
 use App\Http\Controllers\Organization\SettingsController;
+use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
@@ -64,7 +65,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy'])
             ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
 
+        // Everyone drafts purchase orders; managers and admins place and cancel them.
         Route::prefix('purchasing')->name('purchasing.')->group(function () {
+            Route::resource('orders', PurchaseOrderController::class)->parameters(['orders' => 'purchaseOrder']);
+            Route::post('orders/{purchaseOrder}/place', [PurchaseOrderController::class, 'place'])->middleware('role:manager')->name('orders.place');
+            Route::post('orders/{purchaseOrder}/cancel', [PurchaseOrderController::class, 'cancel'])->middleware('role:manager')->name('orders.cancel');
             Route::resource('suppliers', SupplierController::class)->only(['index', 'store', 'update', 'destroy'])
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });

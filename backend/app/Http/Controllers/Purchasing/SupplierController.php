@@ -64,11 +64,17 @@ class SupplierController extends Controller
     }
 
     /**
-     * Delete a supplier. Once purchase orders exist, suppliers that have them will only be deactivated.
+     * Delete a supplier that has no purchase orders.
      */
     public function destroy(Request $request, Supplier $supplier): RedirectResponse
     {
         $this->ensureBelongsToOrganization($request, $supplier);
+
+        if ($supplier->purchaseOrders()->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This supplier has purchase orders. Deactivate it instead.')]);
+
+            return back();
+        }
 
         $supplier->delete();
 

@@ -35,6 +35,7 @@ import { create as receiveStock } from '@/routes/operations/receive';
 import { create as returnStock } from '@/routes/operations/return';
 import { index as membersIndex } from '@/routes/organization/members';
 import { index as organizationSettings } from '@/routes/organization/settings';
+import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { index as warehousesIndex } from '@/routes/warehouses';
@@ -64,7 +65,10 @@ const mainNavItems: SidebarNavItem[] = [
     {
         title: 'Purchasing',
         icon: ShoppingCart,
-        items: [{ title: 'Suppliers', href: suppliersIndex() }],
+        items: [
+            { title: 'Purchase orders', href: purchaseOrdersIndex() },
+            { title: 'Suppliers', href: suppliersIndex() },
+        ],
     },
     {
         title: 'Operations',

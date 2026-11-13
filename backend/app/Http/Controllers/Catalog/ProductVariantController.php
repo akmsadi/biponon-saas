@@ -76,6 +76,12 @@ class ProductVariantController extends Controller
             return back();
         }
 
+        if ($variant->purchaseOrderLines()->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This variant is on purchase orders. Deactivate it instead.')]);
+
+            return back();
+        }
+
         $variant->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Variant deleted.')]);

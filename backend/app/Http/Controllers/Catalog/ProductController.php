@@ -123,6 +123,12 @@ class ProductController extends Controller
             return back();
         }
 
+        if ($product->productVariants()->whereHas('purchaseOrderLines')->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This product is on purchase orders. Deactivate it instead.')]);
+
+            return back();
+        }
+
         DB::transaction(function () use ($product): void {
             $product->productVariants()->delete();
             $product->delete();

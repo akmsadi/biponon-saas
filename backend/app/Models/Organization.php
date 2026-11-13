@@ -141,6 +141,11 @@ class Organization extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
+
     public function serialNumbers(): HasMany
     {
         return $this->hasMany(SerialNumber::class);
