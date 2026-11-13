@@ -44,6 +44,11 @@ class ProductVariant extends Model
         return $this->belongsTo(Color::class);
     }
 
+    public function salesOrderLines(): HasMany
+    {
+        return $this->hasMany(SalesOrderLine::class);
+    }
+
     public function purchaseOrderLines(): HasMany
     {
         return $this->hasMany(PurchaseOrderLine::class);

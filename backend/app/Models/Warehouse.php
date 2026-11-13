@@ -43,6 +43,11 @@ class Warehouse extends Model
             || $this->serialNumbers()->exists();
     }
 
+    public function salesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class);
+    }
+
     public function purchaseOrders(): HasMany
     {
         return $this->hasMany(PurchaseOrder::class);

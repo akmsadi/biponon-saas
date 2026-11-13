@@ -39,6 +39,7 @@ import { index as organizationSettings } from '@/routes/organization/settings';
 import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
 import { index as customersIndex } from '@/routes/sales/customers';
+import { index as salesOrdersIndex } from '@/routes/sales/orders';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
@@ -75,7 +76,10 @@ const mainNavItems: SidebarNavItem[] = [
     {
         title: 'Sales',
         icon: Store,
-        items: [{ title: 'Customers', href: customersIndex() }],
+        items: [
+            { title: 'Sales orders', href: salesOrdersIndex() },
+            { title: 'Customers', href: customersIndex() },
+        ],
     },
     {
         title: 'Operations',

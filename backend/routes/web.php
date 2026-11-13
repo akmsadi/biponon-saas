@@ -23,6 +23,7 @@ use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\Sales\CustomerController;
+use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -79,7 +80,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });
 
+        // Everyone drafts sales orders; managers and admins confirm, cancel and close them.
         Route::prefix('sales')->name('sales.')->group(function () {
+            Route::resource('orders', SalesOrderController::class)->parameters(['orders' => 'salesOrder']);
+            Route::post('orders/{salesOrder}/confirm', [SalesOrderController::class, 'confirm'])->middleware('role:manager')->name('orders.confirm');
+            Route::post('orders/{salesOrder}/cancel', [SalesOrderController::class, 'cancel'])->middleware('role:manager')->name('orders.cancel');
+            Route::post('orders/{salesOrder}/close', [SalesOrderController::class, 'close'])->middleware('role:manager')->name('orders.close');
             Route::resource('customers', CustomerController::class)->only(['index', 'store', 'update', 'destroy'])
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
         });

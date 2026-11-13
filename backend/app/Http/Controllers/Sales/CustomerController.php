@@ -64,11 +64,17 @@ class CustomerController extends Controller
     }
 
     /**
-     * Delete a customer.
+     * Delete a customer that has no sales orders.
      */
     public function destroy(Request $request, Customer $customer): RedirectResponse
     {
         $this->ensureBelongsToOrganization($request, $customer);
+
+        if ($customer->salesOrders()->exists()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('This customer has sales orders. Deactivate it instead.')]);
+
+            return back();
+        }
 
         $customer->delete();
 
