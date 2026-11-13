@@ -25,6 +25,7 @@ export type Permissions = {
     runOperations: boolean;
     manageCatalog: boolean;
     manageWarehouses: boolean;
+    managePurchasing: boolean;
     manageMembers: boolean;
     manageSettings: boolean;
     administerPlatform: boolean;

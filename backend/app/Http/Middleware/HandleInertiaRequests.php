@@ -55,6 +55,8 @@ class HandleInertiaRequests extends Middleware
             ],
             // Organization pages show and enter dates in the organization's timezone; elsewhere the browser's.
             'organizationTimezone' => fn () => $request->attributes->get('organization')?->setting('timezone'),
+            // ISO 4217 code that organization pages show money in.
+            'organizationCurrency' => fn () => $request->attributes->get('organization')?->setting('currency'),
 
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'canRegister' => Features::enabled(Features::registration()),
@@ -66,7 +68,7 @@ class HandleInertiaRequests extends Middleware
      * Pages outside the `organization` middleware get no organization permissions. `administerPlatform` does not
      * depend on the organization.
      *
-     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}
+     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, managePurchasing: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}
      */
     private function permissions(Request $request): array
     {
@@ -76,6 +78,7 @@ class HandleInertiaRequests extends Middleware
             'runOperations' => Organization::roleIncludes($role, 'member'),
             'manageCatalog' => Organization::roleIncludes($role, 'manager'),
             'manageWarehouses' => Organization::roleIncludes($role, 'manager'),
+            'managePurchasing' => Organization::roleIncludes($role, 'manager'),
             'manageMembers' => Organization::roleIncludes($role, 'admin'),
             'manageSettings' => Organization::roleIncludes($role, 'admin'),
             'administerPlatform' => $request->user()?->isSuperAdmin() ?? false,

@@ -4,6 +4,7 @@ import {
     Boxes,
     LayoutGrid,
     Settings,
+    ShoppingCart,
     Tags,
     Users,
     Warehouse,
@@ -34,6 +35,7 @@ import { create as receiveStock } from '@/routes/operations/receive';
 import { create as returnStock } from '@/routes/operations/return';
 import { index as membersIndex } from '@/routes/organization/members';
 import { index as organizationSettings } from '@/routes/organization/settings';
+import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
@@ -59,6 +61,11 @@ const mainNavItems: SidebarNavItem[] = [
         ],
     },
     { title: 'Warehouses', href: warehousesIndex(), icon: Warehouse },
+    {
+        title: 'Purchasing',
+        icon: ShoppingCart,
+        items: [{ title: 'Suppliers', href: suppliersIndex() }],
+    },
     {
         title: 'Operations',
         icon: ArrowLeftRight,

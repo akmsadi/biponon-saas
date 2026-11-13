@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validates the organization's name, contact details and timezone.
+ * Validates the organization's name, contact details, timezone and currency.
  */
 class GeneralSettingsRequest extends FormRequest
 {
@@ -24,14 +24,29 @@ class GeneralSettingsRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
             'timezone' => ['required', 'string', Rule::in(timezone_identifiers_list())],
+            'currency' => ['required', 'string', 'regex:/^[A-Z]{3}$/'],
         ];
     }
 
     /**
-     * Trim the text fields and lower-case the email.
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'currency.regex' => __('The currency must be a three-letter ISO 4217 code, e.g. BDT.'),
+        ];
+    }
+
+    /**
+     * Trim the text fields, lower-case the email and upper-case the currency.
      */
     protected function prepareForValidation(): void
     {
+        if (is_string($this->input('currency'))) {
+            $this->merge(['currency' => strtoupper(trim($this->input('currency')))]);
+        }
+
         foreach (['name', 'contact_email', 'phone', 'address'] as $field) {
             if (is_string($this->input($field))) {
                 $this->merge([$field => trim($this->input($field))]);

@@ -15,9 +15,16 @@ type Props = {
         phone: string | null;
         address: string | null;
         timezone: string;
+        currency: string;
     };
     timezones: string[];
 };
+
+// Suggestions for the currency field; the server accepts any three-letter code.
+const currencyCodes: string[] =
+    typeof Intl.supportedValuesOf === 'function'
+        ? Intl.supportedValuesOf('currency')
+        : [];
 
 export default function GeneralSettings({ settings, timezones }: Props) {
     const canEdit = usePage().props.auth.can.manageSettings;
@@ -30,7 +37,7 @@ export default function GeneralSettings({ settings, timezones }: Props) {
                 <Heading
                     variant="small"
                     title="General"
-                    description="Your organization's name, contact details and timezone"
+                    description="Your organization's name, contact details, timezone and currency"
                 />
 
                 <Form
@@ -133,6 +140,31 @@ export default function GeneralSettings({ settings, timezones }: Props) {
                                     a city or region, e.g. Dhaka.
                                 </p>
                                 <InputError message={errors.timezone} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="currency">Currency</Label>
+                                <Input
+                                    id="currency"
+                                    name="currency"
+                                    required
+                                    maxLength={3}
+                                    list="currency-options"
+                                    defaultValue={settings.currency}
+                                    placeholder="e.g. BDT"
+                                    autoComplete="off"
+                                    className="font-mono uppercase"
+                                />
+                                <datalist id="currency-options">
+                                    {currencyCodes.map((code) => (
+                                        <option key={code} value={code} />
+                                    ))}
+                                </datalist>
+                                <p className="text-xs text-muted-foreground">
+                                    Purchase costs are entered and shown in this
+                                    currency (ISO code, e.g. BDT, USD).
+                                </p>
+                                <InputError message={errors.currency} />
                             </div>
 
                             {canEdit && (
