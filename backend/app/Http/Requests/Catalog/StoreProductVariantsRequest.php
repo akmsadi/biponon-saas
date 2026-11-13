@@ -13,7 +13,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Validates a batch of new variants for one product. Every variant shares the same optional price.
+ * Validates a batch of new variants for one product. Every variant shares the same optional price and reorder level.
  */
 class StoreProductVariantsRequest extends FormRequest
 {
@@ -58,6 +58,7 @@ class StoreProductVariantsRequest extends FormRequest
                 Rule::unique(ProductVariant::class, 'barcode')->where('organization_id', $organization->id),
             ],
             'price' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999999.99'],
+            'reorder_level' => ['nullable', 'integer', 'min:0', 'max:1000000'],
         ];
     }
 

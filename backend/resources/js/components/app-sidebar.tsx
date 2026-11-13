@@ -35,8 +35,8 @@ import { create as dispatchStock } from '@/routes/operations/dispatch';
 import { create as receiveStock } from '@/routes/operations/receive';
 import { create as returnStock } from '@/routes/operations/return';
 import { index as membersIndex } from '@/routes/organization/members';
+import { index as organizationSettings } from '@/routes/organization/settings';
 import { create as transferStock } from '@/routes/operations/transfer';
-import { edit as editProfile } from '@/routes/profile';
 import { index as warehousesIndex } from '@/routes/warehouses';
 import type { SidebarNavItem } from '@/types';
 
@@ -71,8 +71,14 @@ const mainNavItems: SidebarNavItem[] = [
             { title: 'Return stock', href: returnStock() },
         ],
     },
-    { title: 'Settings', href: editProfile(), icon: Settings },
 ];
+
+// The current organization's settings; personal settings live in the user menu.
+const settingsNavItem: SidebarNavItem = {
+    title: 'Settings',
+    href: organizationSettings(),
+    icon: Settings,
+};
 
 // Only admins of the current organization manage its members.
 const adminNavItems: SidebarNavItem[] = [
@@ -97,16 +103,19 @@ const footerNavItems: SidebarNavItem[] = [];
 export function AppSidebar() {
     const { auth } = usePage().props;
 
-    const settingsItem = mainNavItems.slice(-1);
     // Without an organization (e.g. a super-admin who belongs to none) the organization pages only redirect away.
     const organizationItems =
-        auth.activeOrganizations.length > 0 ? mainNavItems.slice(0, -1) : [];
+        auth.activeOrganizations.length > 0
+            ? [
+                  ...mainNavItems,
+                  ...(auth.can.manageMembers ? adminNavItems : []),
+                  settingsNavItem,
+              ]
+            : [];
 
     const navItems = [
         ...organizationItems,
-        ...(auth.can.manageMembers ? adminNavItems : []),
         ...(auth.can.administerPlatform ? platformNavItems : []),
-        ...settingsItem,
     ];
 
     return (

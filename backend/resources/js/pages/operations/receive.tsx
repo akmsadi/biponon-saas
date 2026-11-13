@@ -34,6 +34,7 @@ type Warehouse = { id: number; name: string; code: string };
 
 type Props = {
     warehouses: Warehouse[];
+    defaultWarehouseId: number | null;
     products: LineProduct[];
 };
 
@@ -44,10 +45,14 @@ type ReceiveForm = {
     lines: StockLineValues[];
 };
 
-export default function ReceiveStock({ warehouses, products }: Props) {
+export default function ReceiveStock({
+    warehouses,
+    products,
+    defaultWarehouseId,
+}: Props) {
     const { data, setData, transform, post, processing, errors } =
         useForm<ReceiveForm>({
-            warehouse_id: '',
+            warehouse_id: defaultWarehouseId ? String(defaultWarehouseId) : '',
             received_at: localNow(),
             notes: '',
             lines: [emptyStockLine()],

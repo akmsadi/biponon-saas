@@ -31,7 +31,11 @@ export function NavMain({ items }: { items: SidebarNavItem[] }) {
                             <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={isCurrentUrl(item.href)}
+                                    isActive={isCurrentUrl(
+                                        item.href,
+                                        undefined,
+                                        true,
+                                    )}
                                     tooltip={{ children: item.title }}
                                 >
                                     <Link href={item.href} prefetch>
@@ -68,13 +72,22 @@ export function NavMain({ items }: { items: SidebarNavItem[] }) {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         {item.items.map((child) => (
-                                            <SidebarMenuSubItem key={child.title}>
+                                            <SidebarMenuSubItem
+                                                key={child.title}
+                                            >
                                                 <SidebarMenuSubButton
                                                     asChild
-                                                    isActive={isCurrentUrl(child.href)}
+                                                    isActive={isCurrentUrl(
+                                                        child.href,
+                                                    )}
                                                 >
-                                                    <Link href={child.href} prefetch>
-                                                        <span>{child.title}</span>
+                                                    <Link
+                                                        href={child.href}
+                                                        prefetch
+                                                    >
+                                                        <span>
+                                                            {child.title}
+                                                        </span>
                                                     </Link>
                                                 </SidebarMenuSubButton>
                                             </SidebarMenuSubItem>

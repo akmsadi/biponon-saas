@@ -89,6 +89,7 @@ class ProductController extends Controller
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(['id', 'name', 'code', 'hex_code']),
+            'defaultReorderLevel' => $organization->setting('default_reorder_level'),
         ]);
     }
 

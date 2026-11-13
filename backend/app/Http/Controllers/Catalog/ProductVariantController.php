@@ -35,6 +35,7 @@ class ProductVariantController extends Controller
                     'sku' => $variant['sku'],
                     'barcode' => $variant['barcode'] ?? null,
                     'price' => $request->validated('price'),
+                    'reorder_level' => $request->validated('reorder_level'),
                     'is_active' => true,
                 ]);
             }

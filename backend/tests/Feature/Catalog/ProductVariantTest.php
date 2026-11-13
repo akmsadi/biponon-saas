@@ -51,6 +51,20 @@ class ProductVariantTest extends TestCase
             ->post(route('catalog.products.variants.store', $this->product), ['variants' => $variants, ...$extra]);
     }
 
+    public function test_a_batch_of_variants_can_share_a_reorder_level(): void
+    {
+        $this->storeVariants([
+            ['size_id' => $this->medium->id, 'color_id' => $this->red->id, 'sku' => 'TEE-M-RED'],
+            ['size_id' => $this->large->id, 'color_id' => $this->red->id, 'sku' => 'TEE-L-RED'],
+        ], ['reorder_level' => '8'])->assertSessionHasNoErrors();
+
+        $this->assertSame([8, 8], $this->product->productVariants()->pluck('reorder_level')->all());
+
+        $this->storeVariants([
+            ['size_id' => $this->medium->id, 'color_id' => $this->red->id, 'sku' => 'TEE-M-RED-2'],
+        ], ['reorder_level' => '-1'])->assertSessionHasErrors('reorder_level');
+    }
+
     public function test_a_batch_of_variants_is_created_with_a_shared_price(): void
     {
         $this->storeVariants([

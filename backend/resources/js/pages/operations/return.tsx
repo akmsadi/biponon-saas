@@ -34,6 +34,7 @@ type Warehouse = { id: number; name: string; code: string };
 
 type Props = {
     warehouses: Warehouse[];
+    defaultWarehouseId: number | null;
     products: LineProduct[];
 };
 
@@ -44,10 +45,14 @@ type ReturnForm = {
     lines: StockLineValues[];
 };
 
-export default function ReturnStock({ warehouses, products }: Props) {
+export default function ReturnStock({
+    warehouses,
+    products,
+    defaultWarehouseId,
+}: Props) {
     const { data, setData, transform, post, processing, errors } =
         useForm<ReturnForm>({
-            warehouse_id: '',
+            warehouse_id: defaultWarehouseId ? String(defaultWarehouseId) : '',
             returned_at: localNow(),
             notes: '',
             lines: [emptyStockLine()],

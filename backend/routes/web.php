@@ -18,6 +18,7 @@ use App\Http\Controllers\Operations\ReturnStockController;
 use App\Http\Controllers\Operations\TransferStockController;
 use App\Http\Controllers\Organization\InvitationController;
 use App\Http\Controllers\Organization\MemberController;
+use App\Http\Controllers\Organization\SettingsController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +72,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('dispatch', [DispatchStockController::class, 'store'])->name('dispatch.store');
             Route::get('return', [ReturnStockController::class, 'create'])->name('return.create');
             Route::post('return', [ReturnStockController::class, 'store'])->name('return.store');
+        });
+
+        // Everyone views the organization's settings and may leave it; only admins change settings.
+        Route::prefix('organization/settings')->name('organization.settings.')->group(function () {
+            Route::redirect('/', '/organization/settings/general')->name('index');
+            Route::get('general', [SettingsController::class, 'editGeneral'])->name('general.edit');
+            Route::put('general', [SettingsController::class, 'updateGeneral'])->middleware('role:admin')->name('general.update');
+            Route::get('inventory', [SettingsController::class, 'editInventory'])->name('inventory.edit');
+            Route::put('inventory', [SettingsController::class, 'updateInventory'])->middleware('role:admin')->name('inventory.update');
+            Route::get('membership', [SettingsController::class, 'editMembership'])->name('membership.edit');
+            Route::delete('membership', [SettingsController::class, 'leave'])->name('membership.destroy');
         });
 
         Route::prefix('organization')->name('organization.')->middleware('role:admin')->group(function () {
