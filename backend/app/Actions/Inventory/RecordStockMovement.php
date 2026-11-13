@@ -3,6 +3,7 @@
 namespace App\Actions\Inventory;
 
 use App\Models\ProductVariant;
+use App\Models\PurchaseOrderLine;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -20,6 +21,8 @@ use InvalidArgumentException;
 class RecordStockMovement
 {
     /**
+     * A receipt against a purchase order passes its line, which is linked and whose unit cost is copied.
+     *
      * @throws DomainException when the movement would take a balance below zero
      */
     public function handle(
@@ -31,6 +34,7 @@ class RecordStockMovement
         ?User $performedBy,
         CarbonInterface $occurredAt,
         ?string $notes = null,
+        ?PurchaseOrderLine $purchaseOrderLine = null,
     ): StockMovement {
         $this->ensureValid($variant, $quantity, $fromWarehouse, $toWarehouse);
 
@@ -48,6 +52,8 @@ class RecordStockMovement
             'from_warehouse_id' => $fromWarehouse?->id,
             'to_warehouse_id' => $toWarehouse?->id,
             'quantity' => $quantity,
+            'unit_cost' => $purchaseOrderLine?->unit_cost,
+            'purchase_order_line_id' => $purchaseOrderLine?->id,
             'movement_type' => $movementType,
             'performed_by' => $performedBy?->id,
             'notes' => $notes,

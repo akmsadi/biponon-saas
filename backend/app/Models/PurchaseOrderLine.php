@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * One variant on a purchase order. The unit cost is optional and only managers and admins see it.
@@ -35,6 +36,22 @@ class PurchaseOrderLine extends Model
         return $this->unit_cost === null
             ? null
             : (int) round((float) $this->unit_cost * 100) * $this->quantity_ordered;
+    }
+
+    /**
+     * Units still expected from the supplier.
+     */
+    public function quantityRemaining(): int
+    {
+        return max(0, $this->quantity_ordered - $this->quantity_received);
+    }
+
+    /**
+     * The receipt movements that brought this line's stock in.
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     public function purchaseOrder(): BelongsTo

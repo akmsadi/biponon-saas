@@ -10,7 +10,9 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
+use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -163,6 +165,7 @@ class PurchaseOrderController extends Controller
                 'created_at' => $purchaseOrder->created_at->toIso8601String(),
                 'ordered_at' => $purchaseOrder->ordered_at?->toIso8601String(),
                 'cancelled_at' => $purchaseOrder->cancelled_at?->toIso8601String(),
+                'closed_at' => $purchaseOrder->closed_at?->toIso8601String(),
                 'units_ordered' => $lines->sum('quantity_ordered'),
                 'units_received' => $lines->sum('quantity_received'),
                 ...($canSeeCosts ? [
@@ -186,11 +189,14 @@ class PurchaseOrderController extends Controller
                     ] : []),
                 ]),
             ],
+            'receipts' => $this->receipts($lines),
             'can' => [
                 'edit' => $purchaseOrder->isDraft(),
                 'delete' => $purchaseOrder->isDraft(),
                 'place' => $purchaseOrder->isDraft() && $this->roleIncludes($request, 'manager'),
                 'cancel' => $purchaseOrder->canBeCancelled() && $this->roleIncludes($request, 'manager'),
+                'receive' => $purchaseOrder->canReceive(),
+                'close' => $purchaseOrder->canBeClosed() && $this->roleIncludes($request, 'manager'),
             ],
             'canSeeCosts' => $canSeeCosts,
         ]);
@@ -315,6 +321,26 @@ class PurchaseOrderController extends Controller
     }
 
     /**
+     * Close a partly received order when the supplier will not send the rest. What arrived stays in stock.
+     */
+    public function close(Request $request, PurchaseOrder $purchaseOrder): RedirectResponse
+    {
+        $this->ensureBelongsToOrganization($request, $purchaseOrder);
+
+        if (! $purchaseOrder->canBeClosed()) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('Only partly received orders can be closed.')]);
+
+            return back();
+        }
+
+        $purchaseOrder->update(['status' => 'closed', 'closed_at' => now()]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __(':number closed.', ['number' => $purchaseOrder->number])]);
+
+        return back();
+    }
+
+    /**
      * Replace the order's lines. When the user may not set costs, the costs already on the order are kept
      * for variants that stay on it.
      *
@@ -377,6 +403,37 @@ class PurchaseOrderController extends Controller
             'warehouses' => $organization->warehouses()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'code']),
             'products' => $products,
         ];
+    }
+
+    /**
+     * The receipt movements of the order's lines, newest first.
+     *
+     * @param  Collection<int, PurchaseOrderLine>  $lines  the order's lines with their variants loaded
+     * @return list<array<string, mixed>>
+     */
+    private function receipts(Collection $lines): array
+    {
+        $variants = $lines->pluck('productVariant', 'id');
+
+        return StockMovement::query()
+            ->whereIn('purchase_order_line_id', $lines->pluck('id'))
+            ->with(['toWarehouse:id,name,code', 'performedBy:id,name'])
+            ->withCount('serialNumbers')
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (StockMovement $movement): array => [
+                'id' => $movement->id,
+                'occurred_at' => $movement->occurred_at->toIso8601String(),
+                'product' => $variants[$movement->purchase_order_line_id]->product->name,
+                'sku' => $variants[$movement->purchase_order_line_id]->sku,
+                'warehouse' => $movement->toWarehouse->only(['name', 'code']),
+                'quantity' => $movement->quantity,
+                'serial_count' => $movement->serial_numbers_count,
+                'performed_by' => $movement->performedBy?->name,
+                'notes' => $movement->notes,
+            ])
+            ->all();
     }
 
     private function notADraft(PurchaseOrder $order): RedirectResponse

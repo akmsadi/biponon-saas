@@ -12,16 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * An order for stock from a supplier, delivered into one warehouse. Lines can change only while it is a draft.
  */
-#[Fillable(['organization_id', 'sequence', 'number', 'supplier_id', 'warehouse_id', 'status', 'expected_at', 'notes', 'created_by', 'ordered_at', 'cancelled_at'])]
+#[Fillable(['organization_id', 'sequence', 'number', 'supplier_id', 'warehouse_id', 'status', 'expected_at', 'notes', 'created_by', 'ordered_at', 'cancelled_at', 'closed_at'])]
 class PurchaseOrder extends Model
 {
     /** @use HasFactory<PurchaseOrderFactory> */
     use HasFactory;
 
     /**
-     * Statuses in lifecycle order: draft → ordered → partially_received → received, or cancelled.
+     * Statuses in lifecycle order: draft → ordered → partially_received → received. Drafts and untouched
+     * orders can be cancelled; a partly received order can be closed when the rest will not arrive.
      */
-    public const STATUSES = ['draft', 'ordered', 'partially_received', 'received', 'cancelled'];
+    public const STATUSES = ['draft', 'ordered', 'partially_received', 'received', 'closed', 'cancelled'];
 
     protected function casts(): array
     {
@@ -30,6 +31,7 @@ class PurchaseOrder extends Model
             'expected_at' => 'date',
             'ordered_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'closed_at' => 'datetime',
         ];
     }
 
@@ -52,6 +54,22 @@ class PurchaseOrder extends Model
     public function canBeCancelled(): bool
     {
         return in_array($this->status, ['draft', 'ordered'], true);
+    }
+
+    /**
+     * Stock can be received while the order is placed and not yet complete, closed or cancelled.
+     */
+    public function canReceive(): bool
+    {
+        return in_array($this->status, ['ordered', 'partially_received'], true);
+    }
+
+    /**
+     * A partly received order can be closed when the supplier will not send the rest.
+     */
+    public function canBeClosed(): bool
+    {
+        return $this->status === 'partially_received';
     }
 
     public function organization(): BelongsTo

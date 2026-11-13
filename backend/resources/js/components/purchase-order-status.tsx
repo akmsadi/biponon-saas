@@ -5,6 +5,7 @@ export type PurchaseOrderStatus =
     | 'ordered'
     | 'partially_received'
     | 'received'
+    | 'closed'
     | 'cancelled';
 
 export const PURCHASE_ORDER_STATUSES: {
@@ -15,6 +16,7 @@ export const PURCHASE_ORDER_STATUSES: {
     { value: 'ordered', label: 'Ordered' },
     { value: 'partially_received', label: 'Partly received' },
     { value: 'received', label: 'Received' },
+    { value: 'closed', label: 'Closed short' },
     { value: 'cancelled', label: 'Cancelled' },
 ];
 
@@ -26,6 +28,7 @@ const VARIANTS: Record<
     ordered: 'default',
     partially_received: 'default',
     received: 'secondary',
+    closed: 'secondary',
     cancelled: 'outline',
 };
 
