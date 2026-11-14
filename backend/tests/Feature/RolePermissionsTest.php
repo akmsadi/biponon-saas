@@ -32,14 +32,14 @@ class RolePermissionsTest extends TestCase
     }
 
     /**
-     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, managePurchasing: bool, manageSales: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}}>
+     * @return array<string, array{string, array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, managePurchasing: bool, manageSales: bool, viewCosts: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}}>
      */
     public static function rolePermissions(): array
     {
         return [
-            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'managePurchasing' => false, 'manageSales' => false, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
-            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'managePurchasing' => true, 'manageSales' => true, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
-            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'managePurchasing' => true, 'manageSales' => true, 'manageMembers' => true, 'manageSettings' => true, 'administerPlatform' => false]],
+            'member' => ['member', ['runOperations' => true, 'manageCatalog' => false, 'manageWarehouses' => false, 'managePurchasing' => false, 'manageSales' => false, 'viewCosts' => false, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
+            'manager' => ['manager', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'managePurchasing' => true, 'manageSales' => true, 'viewCosts' => true, 'manageMembers' => false, 'manageSettings' => false, 'administerPlatform' => false]],
+            'admin' => ['admin', ['runOperations' => true, 'manageCatalog' => true, 'manageWarehouses' => true, 'managePurchasing' => true, 'manageSales' => true, 'viewCosts' => true, 'manageMembers' => true, 'manageSettings' => true, 'administerPlatform' => false]],
         ];
     }
 
