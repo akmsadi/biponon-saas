@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeftRight,
     Boxes,
+    ChartColumn,
     LayoutGrid,
     Settings,
     ShoppingCart,
@@ -38,11 +39,12 @@ import { index as membersIndex } from '@/routes/organization/members';
 import { index as organizationSettings } from '@/routes/organization/settings';
 import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
+import { index as stockValueReport } from '@/routes/reports/stock-value';
 import { index as customersIndex } from '@/routes/sales/customers';
 import { index as salesOrdersIndex } from '@/routes/sales/orders';
 import { create as transferStock } from '@/routes/operations/transfer';
 import { index as warehousesIndex } from '@/routes/warehouses';
-import type { SidebarNavItem } from '@/types';
+import type { Permissions, SidebarNavItem } from '@/types';
 
 const mainNavItems: SidebarNavItem[] = [
     { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
@@ -93,6 +95,21 @@ const mainNavItems: SidebarNavItem[] = [
     },
 ];
 
+/**
+ * Reports the user may open; the section is hidden when there are none.
+ */
+function reportsNavItem(can: Permissions): SidebarNavItem | null {
+    const items = [
+        ...(can.viewCosts
+            ? [{ title: 'Stock value', href: stockValueReport() }]
+            : []),
+    ];
+
+    return items.length > 0
+        ? { title: 'Reports', icon: ChartColumn, items }
+        : null;
+}
+
 // The current organization's settings; personal settings live in the user menu.
 const settingsNavItem: SidebarNavItem = {
     title: 'Settings',
@@ -113,12 +130,14 @@ const footerNavItems: SidebarNavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage().props;
+    const reports = reportsNavItem(auth.can);
 
     // Without an organization (e.g. a super-admin who belongs to none) the organization pages only redirect away.
     const organizationItems =
         auth.activeOrganizations.length > 0
             ? [
                   ...mainNavItems,
+                  ...(reports ? [reports] : []),
                   ...(auth.can.manageMembers ? adminNavItems : []),
                   settingsNavItem,
               ]

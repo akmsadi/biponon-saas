@@ -27,6 +27,8 @@ export type Permissions = {
     manageWarehouses: boolean;
     managePurchasing: boolean;
     manageSales: boolean;
+    /** Purchase costs and anything built from them, such as the stock value report. */
+    viewCosts: boolean;
     manageMembers: boolean;
     manageSettings: boolean;
     administerPlatform: boolean;

@@ -22,6 +22,7 @@ use App\Http\Controllers\Organization\SettingsController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
+use App\Http\Controllers\Reports\StockValueController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\SalesOrderController;
 use App\Http\Controllers\Sales\SalesOrderDispatchController;
@@ -134,6 +135,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('movements', [StockMovementController::class, 'index'])->name('movements.index');
             Route::get('movements/export', [StockMovementController::class, 'export'])->name('movements.export');
             Route::get('movements/{stockMovement}/serials', [StockMovementController::class, 'serials'])->name('movements.serials');
+        });
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // Stock value is built from purchase costs, which only managers and admins see.
+            Route::get('stock-value', [StockValueController::class, 'index'])->middleware('role:manager')->name('stock-value.index');
+            Route::get('stock-value/export', [StockValueController::class, 'export'])->middleware('role:manager')->name('stock-value.export');
         });
     });
 });

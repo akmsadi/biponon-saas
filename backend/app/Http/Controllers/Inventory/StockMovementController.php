@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Concerns\ScopesToOrganization;
+use App\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\SerialNumber;
@@ -23,6 +24,7 @@ use Throwable;
 class StockMovementController extends Controller
 {
     use ScopesToOrganization;
+    use StreamsCsv;
 
     private const PER_PAGE = 25;
 
@@ -92,18 +94,15 @@ class StockMovementController extends Controller
         $query = $this->filteredQuery($organization, $filters)->with('serialNumbers:id,serial_number');
         $filename = 'stock-movements-'.now($filters['tz'])->format('Ymd-His').'.csv';
 
-        return response()->streamDownload(function () use ($query, $filters, $canSeeCosts): void {
-            $output = fopen('php://output', 'w');
-            fwrite($output, "\u{FEFF}"); // UTF-8 BOM so Excel reads non-ASCII names correctly.
+        $header = [
+            'Date', 'Type', 'Product', 'Size', 'Color', 'SKU', 'From', 'To', 'Quantity',
+            ...($canSeeCosts ? ['Unit cost'] : []),
+            'Reference', 'Performed by', 'Serials', 'Notes',
+        ];
 
-            fputcsv($output, [
-                'Date', 'Type', 'Product', 'Size', 'Color', 'SKU', 'From', 'To', 'Quantity',
-                ...($canSeeCosts ? ['Unit cost'] : []),
-                'Reference', 'Performed by', 'Serials', 'Notes',
-            ], escape: '');
-
+        return $this->streamCsv($filename, $header, function () use ($query, $filters, $canSeeCosts): iterable {
             foreach ($query->lazy(500) as $movement) {
-                fputcsv($output, array_map($this->csvSafe(...), [
+                yield [
                     $movement->occurred_at->setTimezone($filters['tz'])->format('Y-m-d H:i'),
                     $movement->movement_type,
                     $movement->product_name,
@@ -118,11 +117,9 @@ class StockMovementController extends Controller
                     $movement->performer_name ?? '',
                     $movement->serialNumbers->pluck('serial_number')->implode(' '),
                     $movement->notes ?? '',
-                ]), escape: '');
+                ];
             }
-
-            fclose($output);
-        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        });
     }
 
     /**
@@ -247,13 +244,5 @@ class StockMovementController extends Controller
             (int) $movement->from_warehouse_id === $warehouseId => 'out',
             default => null,
         };
-    }
-
-    /**
-     * Stop spreadsheet apps from treating user-entered text as a formula.
-     */
-    private function csvSafe(mixed $value): mixed
-    {
-        return is_string($value) && preg_match('/^[=+\-@\t\r]/', $value) === 1 ? "'".$value : $value;
     }
 }

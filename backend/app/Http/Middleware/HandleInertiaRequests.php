@@ -68,7 +68,7 @@ class HandleInertiaRequests extends Middleware
      * Pages outside the `organization` middleware get no organization permissions. `administerPlatform` does not
      * depend on the organization.
      *
-     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, managePurchasing: bool, manageSales: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}
+     * @return array{runOperations: bool, manageCatalog: bool, manageWarehouses: bool, managePurchasing: bool, manageSales: bool, viewCosts: bool, manageMembers: bool, manageSettings: bool, administerPlatform: bool}
      */
     private function permissions(Request $request): array
     {
@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
             'manageWarehouses' => Organization::roleIncludes($role, 'manager'),
             'managePurchasing' => Organization::roleIncludes($role, 'manager'),
             'manageSales' => Organization::roleIncludes($role, 'manager'),
+            'viewCosts' => Organization::roleIncludes($role, 'manager'),
             'manageMembers' => Organization::roleIncludes($role, 'admin'),
             'manageSettings' => Organization::roleIncludes($role, 'admin'),
             'administerPlatform' => $request->user()?->isSuperAdmin() ?? false,
