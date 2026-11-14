@@ -39,6 +39,7 @@ import { index as membersIndex } from '@/routes/organization/members';
 import { index as organizationSettings } from '@/routes/organization/settings';
 import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
+import { index as purchasesReport } from '@/routes/reports/purchases';
 import { index as salesReport } from '@/routes/reports/sales';
 import { index as stockValueReport } from '@/routes/reports/stock-value';
 import { index as customersIndex } from '@/routes/sales/customers';
@@ -102,6 +103,7 @@ const mainNavItems: SidebarNavItem[] = [
 function reportsNavItem(can: Permissions): SidebarNavItem | null {
     const items = [
         { title: 'Sales', href: salesReport() },
+        { title: 'Purchases', href: purchasesReport() },
         ...(can.viewCosts
             ? [{ title: 'Stock value', href: stockValueReport() }]
             : []),

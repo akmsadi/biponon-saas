@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Concerns\FormatsMoney;
 use App\Concerns\ParsesDateFilters;
 use App\Concerns\ScopesToOrganization;
 use App\Concerns\StreamsCsv;
@@ -25,6 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class SalesReportController extends Controller
 {
+    use FormatsMoney;
     use ParsesDateFilters;
     use ScopesToOrganization;
     use StreamsCsv;
@@ -267,13 +269,5 @@ class SalesReportController extends Controller
             'net_units' => (int) $row->net_units,
             'net_revenue' => $this->money((float) $row->net_revenue_cents),
         ];
-    }
-
-    /**
-     * Cents as a decimal string with two places, the format the pages and money helpers expect.
-     */
-    private function money(float $cents): string
-    {
-        return number_format(round($cents) / 100, 2, '.', '');
     }
 }

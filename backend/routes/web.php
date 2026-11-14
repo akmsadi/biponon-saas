@@ -22,6 +22,7 @@ use App\Http\Controllers\Organization\SettingsController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
+use App\Http\Controllers\Reports\PurchasesReportController;
 use App\Http\Controllers\Reports\SalesReportController;
 use App\Http\Controllers\Reports\StockValueController;
 use App\Http\Controllers\Sales\CustomerController;
@@ -145,6 +146,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Sales prices are visible to everyone, so everyone sees the sales report.
             Route::get('sales', [SalesReportController::class, 'index'])->name('sales.index');
             Route::get('sales/export', [SalesReportController::class, 'export'])->name('sales.export');
+            // Everyone sees purchases by supplier; the amounts are left out for members.
+            Route::get('purchases', [PurchasesReportController::class, 'index'])->name('purchases.index');
+            Route::get('purchases/export', [PurchasesReportController::class, 'export'])->name('purchases.export');
         });
     });
 });
