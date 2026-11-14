@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Concerns\FormatsMoney;
 use App\Concerns\ScopesToOrganization;
 use App\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
@@ -25,6 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class StockValueController extends Controller
 {
+    use FormatsMoney;
     use ScopesToOrganization;
     use StreamsCsv;
 
@@ -202,13 +204,5 @@ class StockValueController extends Controller
             'average_cost' => $isCosted ? $this->money((float) $row->cost_cents / (int) $row->costed_quantity) : null,
             'value' => $isCosted ? $this->money((float) $row->value_cents) : null,
         ];
-    }
-
-    /**
-     * Cents as a decimal string with two places, the format the pages and money helpers expect.
-     */
-    private function money(float $cents): string
-    {
-        return number_format(round($cents) / 100, 2, '.', '');
     }
 }
