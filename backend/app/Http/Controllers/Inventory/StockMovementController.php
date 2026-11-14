@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Concerns\ParsesDateFilters;
 use App\Concerns\ScopesToOrganization;
 use App\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
@@ -16,13 +17,13 @@ use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Throwable;
 
 /**
  * The read-only stock ledger: every movement into, out of, or between warehouses, newest first.
  */
 class StockMovementController extends Controller
 {
+    use ParsesDateFilters;
     use ScopesToOrganization;
     use StreamsCsv;
 
@@ -156,19 +157,6 @@ class StockMovementController extends Controller
             'date_to' => $this->parseDate($request->string('date_to')->toString(), $timezone)?->endOfDay(),
             'tz' => $timezone,
         ];
-    }
-
-    private function parseDate(string $value, string $timezone): ?Carbon
-    {
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) !== 1) {
-            return null;
-        }
-
-        try {
-            return Carbon::createFromFormat('!Y-m-d', $value, $timezone) ?: null;
-        } catch (Throwable) {
-            return null;
-        }
     }
 
     /**
