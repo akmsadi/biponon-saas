@@ -41,6 +41,7 @@ import { index as purchaseOrdersIndex } from '@/routes/purchasing/orders';
 import { index as suppliersIndex } from '@/routes/purchasing/suppliers';
 import { index as purchasesReport } from '@/routes/reports/purchases';
 import { index as salesReport } from '@/routes/reports/sales';
+import { index as slowMovingReport } from '@/routes/reports/slow-moving';
 import { index as stockValueReport } from '@/routes/reports/stock-value';
 import { index as customersIndex } from '@/routes/sales/customers';
 import { index as salesOrdersIndex } from '@/routes/sales/orders';
@@ -104,6 +105,7 @@ function reportsNavItem(can: Permissions): SidebarNavItem | null {
     const items = [
         { title: 'Sales', href: salesReport() },
         { title: 'Purchases', href: purchasesReport() },
+        { title: 'Slow-moving stock', href: slowMovingReport() },
         ...(can.viewCosts
             ? [{ title: 'Stock value', href: stockValueReport() }]
             : []),
