@@ -22,6 +22,7 @@ use App\Http\Controllers\Organization\SettingsController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
+use App\Http\Controllers\Reports\SalesReportController;
 use App\Http\Controllers\Reports\StockValueController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\SalesOrderController;
@@ -141,6 +142,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Stock value is built from purchase costs, which only managers and admins see.
             Route::get('stock-value', [StockValueController::class, 'index'])->middleware('role:manager')->name('stock-value.index');
             Route::get('stock-value/export', [StockValueController::class, 'export'])->middleware('role:manager')->name('stock-value.export');
+            // Sales prices are visible to everyone, so everyone sees the sales report.
+            Route::get('sales', [SalesReportController::class, 'index'])->name('sales.index');
+            Route::get('sales/export', [SalesReportController::class, 'export'])->name('sales.export');
         });
     });
 });
