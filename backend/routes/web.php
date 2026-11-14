@@ -24,6 +24,7 @@ use App\Http\Controllers\Purchasing\PurchaseOrderReceiptController;
 use App\Http\Controllers\Purchasing\SupplierController;
 use App\Http\Controllers\Reports\PurchasesReportController;
 use App\Http\Controllers\Reports\SalesReportController;
+use App\Http\Controllers\Reports\SlowMovingStockController;
 use App\Http\Controllers\Reports\StockValueController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\SalesOrderController;
@@ -149,6 +150,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Everyone sees purchases by supplier; the amounts are left out for members.
             Route::get('purchases', [PurchasesReportController::class, 'index'])->name('purchases.index');
             Route::get('purchases/export', [PurchasesReportController::class, 'export'])->name('purchases.export');
+            // Everyone sees slow-moving stock; values are left out for members.
+            Route::get('slow-moving', [SlowMovingStockController::class, 'index'])->name('slow-moving.index');
+            Route::get('slow-moving/export', [SlowMovingStockController::class, 'export'])->name('slow-moving.export');
         });
     });
 });

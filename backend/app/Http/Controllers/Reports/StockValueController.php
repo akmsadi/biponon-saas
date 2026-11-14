@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Actions\Inventory\AverageReceiptCosts;
 use App\Concerns\FormatsMoney;
 use App\Concerns\ScopesToOrganization;
 use App\Concerns\StreamsCsv;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\StockBalance;
-use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -113,7 +113,7 @@ class StockValueController extends Controller
             ->join('products', 'products.id', '=', 'product_variants.product_id')
             ->join('sizes', 'sizes.id', '=', 'product_variants.size_id')
             ->join('colors', 'colors.id', '=', 'product_variants.color_id')
-            ->leftJoinSub($this->receiptCosts($organization), 'costs', 'costs.product_variant_id', '=', 'stock_balances.product_variant_id')
+            ->leftJoinSub(app(AverageReceiptCosts::class)->query($organization), 'costs', 'costs.product_variant_id', '=', 'stock_balances.product_variant_id')
             ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('products.name', 'like', '%'.$filters['search'].'%')
                 ->orWhere('product_variants.sku', 'like', '%'.$filters['search'].'%')))
@@ -141,24 +141,6 @@ class StockValueController extends Controller
             ->orderBy('sizes.name')
             ->orderBy('colors.sort_order')
             ->orderBy('colors.name');
-    }
-
-    /**
-     * Per variant, the units received against purchase orders with a cost and what they cost in total, in cents.
-     *
-     * @return Builder<StockMovement>
-     */
-    private function receiptCosts(Organization $organization): Builder
-    {
-        return StockMovement::query()
-            ->where('organization_id', $organization->id)
-            ->where('movement_type', 'receive')
-            ->whereNotNull('unit_cost')
-            ->where('quantity', '>', 0)
-            ->groupBy('product_variant_id')
-            ->select('product_variant_id')
-            ->selectRaw('SUM(quantity) as costed_quantity')
-            ->selectRaw('SUM(quantity * ROUND(unit_cost * 100)) as cost_cents');
     }
 
     /**
