@@ -57,10 +57,10 @@ The app lives outside `public_html` because the main domain serves all of `publi
 ### 2. Check the server (cPanel → Terminal)
 
 ```bash
-php -v                 # must be 8.3 or newer
-which php              # note the full path, used for the cron job
-php -m                 # must list: bcmath ctype fileinfo intl mbstring openssl pdo_mysql tokenizer xml zip
-which mysqldump        # needed for backups; if empty, ask the host for its folder → DB_DUMP_PATH
+php -v                 # must be 8.3 or newer. PHP 8.4.27 (cli) (built: Oct 24 2026 00:00:00) (NTS)
+which php              # note the full path, used for the cron job, /usr/local/bin/php
+php -m                 # must list: bcmath ctype fileinfo intl mbstring openssl pdo_mysql tokenizer xml zip. OK all exists
+which mysqldump        # needed for backups; if empty, ask the host for its folder → DB_DUMP_PATH. /bin/mysqldump
 ```
 
 In **MultiPHP Manager**, set `saas-backend.mypersonalwork.com` to the same PHP version (8.4).
@@ -142,15 +142,47 @@ Open `https://saas-backend.mypersonalwork.com/up`: it should say the application
 
 ### 8. Cron job (queue + backups)
 
-cPanel → **Cron Jobs → Add New Cron Job**, "Once Per Minute" (`* * * * *`), command (use the path
-from `which php`):
+**Why:** shared hosting can't keep background programs running. Instead, cPanel runs one command
+every minute, and Laravel decides what is due each time: sending queued invitation emails (every
+minute) and the database backup (nightly).
+
+**a. Find PHP's full path.** Cron jobs don't know what plain `php` means the way the Terminal does.
+In the Terminal:
 
 ```bash
-cd /home/myperson/biponon/backend && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
+which php        # e.g. /usr/local/bin/php
 ```
 
-This drains the email queue every minute and runs the nightly database backup.
-To confirm it fires, wait a minute and run `php artisan schedule:list`.
+**b. Add the job.** cPanel → **Cron Jobs** → **Add New Cron Job**:
+- **Common Settings:** pick **Once Per Minute (\* \* \* \* \*)**. All five time boxes fill with `*`.
+- **Command:** paste this, with `/usr/local/bin/php` replaced by what step a printed:
+
+```bash
+cd /home/myperson/biponon/backend && /usr/local/bin/php artisan schedule:run >> /home/myperson/cron.log 2>&1
+```
+
+What each part does:
+- `cd /home/myperson/biponon/backend`: go to the app folder.
+- `/usr/local/bin/php artisan schedule:run`: run whatever is due right now.
+- `>> /home/myperson/cron.log 2>&1`: write the output to `cron.log` in your home folder so you can
+  see that it ran.
+
+Click **Add New Cron Job**.
+
+**c. Check it runs.** Wait two minutes, then in the Terminal:
+
+```bash
+cat ~/cron.log
+```
+
+- Lines like `Running [...queue:work...]` → working.
+- `No scheduled commands are ready to run.` → also working (nothing was due).
+- Empty or missing file → the job isn't running; check the command for typos.
+- An error mentioning the PHP version → the path from step a is an older PHP; tell me.
+
+**d. Stop the log growing.** Once it works, edit the cron job and change the end of the command
+from `>> /home/myperson/cron.log 2>&1` to `>> /dev/null 2>&1` (discard the output), then
+`rm ~/cron.log`.
 
 ### 9. First login
 
