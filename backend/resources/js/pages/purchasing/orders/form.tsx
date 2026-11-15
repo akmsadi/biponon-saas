@@ -336,13 +336,13 @@ export default function PurchaseOrderForm({
                                             canSeeCosts && (
                                                 <div className="grid gap-1.5">
                                                     <Label
-                                                        htmlFor={`unit-cost-${line.key}`}
+                                                        htmlFor={`unit-cost-${lineIndex}`}
                                                         className="text-xs text-muted-foreground"
                                                     >
                                                         Unit cost
                                                     </Label>
                                                     <Input
-                                                        id={`unit-cost-${line.key}`}
+                                                        id={`unit-cost-${lineIndex}`}
                                                         type="number"
                                                         inputMode="decimal"
                                                         min={0}

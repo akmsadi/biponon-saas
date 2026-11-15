@@ -1,4 +1,5 @@
 import { ListPlus, Trash2 } from 'lucide-react';
+import { useId } from 'react';
 import type { ReactNode } from 'react';
 import ColorSwatch from '@/components/color-swatch';
 import InputError from '@/components/input-error';
@@ -43,6 +44,10 @@ export const MAX_STOCK_LINES = 50;
 
 let nextLineKey = 0;
 
+/**
+ * `key` is a React list key only: the counter differs between the SSR process and the browser,
+ * so element ids must not be built from it.
+ */
 export function emptyStockLine(): StockLineValues {
     return {
         key: nextLineKey++,
@@ -100,6 +105,7 @@ export default function StockLine<V extends LineVariant>({
     extraErrorKey?: string;
     withSerials?: boolean;
 }) {
+    const fieldId = useId();
     const product = products.find(
         (candidate) => String(candidate.id) === line.product_id,
     );
@@ -196,7 +202,7 @@ export default function StockLine<V extends LineVariant>({
 
                 <div className="grid gap-1.5">
                     <Label
-                        htmlFor={`quantity-${line.key}`}
+                        htmlFor={`${fieldId}-quantity`}
                         className="text-xs text-muted-foreground"
                     >
                         {available === null
@@ -204,7 +210,7 @@ export default function StockLine<V extends LineVariant>({
                             : `Quantity (max ${available})`}
                     </Label>
                     <Input
-                        id={`quantity-${line.key}`}
+                        id={`${fieldId}-quantity`}
                         type="number"
                         inputMode="numeric"
                         min={1}
@@ -256,14 +262,14 @@ export default function StockLine<V extends LineVariant>({
             {withSerials && line.showSerials && (
                 <div className="grid gap-1.5">
                     <Label
-                        htmlFor={`serials-${line.key}`}
+                        htmlFor={`${fieldId}-serials`}
                         className="text-xs text-muted-foreground"
                     >
                         Serial numbers, one per line ({serialCount} of{' '}
                         {line.quantity || 0}). Leave empty to skip.
                     </Label>
                     <textarea
-                        id={`serials-${line.key}`}
+                        id={`${fieldId}-serials`}
                         rows={4}
                         value={line.serials}
                         onChange={(event) =>

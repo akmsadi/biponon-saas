@@ -505,7 +505,7 @@ export default function SalesOrderShow({ order, history, can }: Props) {
                                                 )}
                                             </td>
                                             <td
-                                                className="px-4 py-3 font-mono text-xs"
+                                                className="px-4 py-3 font-mono text-xs leading-5"
                                                 title={sent.warehouse.name}
                                             >
                                                 {sent.warehouse.code}

@@ -364,13 +364,13 @@ export default function SalesOrderForm({
                                             extraField={
                                                 <div className="grid gap-1.5">
                                                     <Label
-                                                        htmlFor={`unit-price-${line.key}`}
+                                                        htmlFor={`unit-price-${lineIndex}`}
                                                         className="text-xs text-muted-foreground"
                                                     >
                                                         Unit price
                                                     </Label>
                                                     <Input
-                                                        id={`unit-price-${line.key}`}
+                                                        id={`unit-price-${lineIndex}`}
                                                         type="number"
                                                         inputMode="decimal"
                                                         required

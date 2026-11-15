@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ListPlus, Split, Trash2 } from 'lucide-react';
+import { useId } from 'react';
 import type { FormEvent } from 'react';
 import PurchaseOrderReceiptController from '@/actions/App/Http/Controllers/Purchasing/PurchaseOrderReceiptController';
 import ColorSwatch from '@/components/color-swatch';
@@ -510,6 +511,7 @@ function AllocationRow({
     onChange: (changes: Partial<Allocation>) => void;
     onRemove: () => void;
 }) {
+    const fieldId = useId();
     const rowErrors = [
         errorFor(`${errorKey}.warehouse_id`),
         errorFor(`${errorKey}.quantity`),
@@ -549,13 +551,13 @@ function AllocationRow({
 
                 <div className="grid gap-1.5">
                     <Label
-                        htmlFor={`quantity-${split.key}`}
+                        htmlFor={`${fieldId}-quantity`}
                         className="text-xs text-muted-foreground"
                     >
                         Quantity
                     </Label>
                     <Input
-                        id={`quantity-${split.key}`}
+                        id={`${fieldId}-quantity`}
                         type="number"
                         inputMode="numeric"
                         min={0}
@@ -603,7 +605,7 @@ function AllocationRow({
             {split.showSerials && (
                 <div className="grid gap-1.5">
                     <Label
-                        htmlFor={`serials-${split.key}`}
+                        htmlFor={`${fieldId}-serials`}
                         className="text-xs text-muted-foreground"
                     >
                         Serial numbers, one per line (
@@ -611,7 +613,7 @@ function AllocationRow({
                         ). Leave empty to skip.
                     </Label>
                     <textarea
-                        id={`serials-${split.key}`}
+                        id={`${fieldId}-serials`}
                         rows={3}
                         value={split.serials}
                         onChange={(event) =>

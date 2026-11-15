@@ -332,8 +332,7 @@ export default function StockMovements({
                                 <th className="px-4 py-3 font-medium">
                                     Product
                                 </th>
-                                <th className="px-4 py-3 font-medium">SKU</th>
-                                <th className="px-4 py-3 font-medium">
+                                <th className="px-4 py-3 font-medium whitespace-nowrap">
                                     From → To
                                 </th>
                                 <th className="px-4 py-3 text-right font-medium">
@@ -355,7 +354,7 @@ export default function StockMovements({
                             {movements.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={canSeeCosts ? 10 : 9}
+                                        colSpan={canSeeCosts ? 9 : 8}
                                         className="px-4 py-10 text-center text-muted-foreground"
                                     >
                                         {isFiltered
@@ -397,7 +396,7 @@ export default function StockMovements({
                                             </Link>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3">
+                                    <td className="min-w-56 px-4 py-3">
                                         <Link
                                             href={showProduct(
                                                 movement.product.id,
@@ -412,12 +411,12 @@ export default function StockMovements({
                                                 className="size-3"
                                             />
                                             {movement.size} / {movement.color}
+                                            <span className="font-mono">
+                                                {movement.sku}
+                                            </span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-xs">
-                                        {movement.sku}
-                                    </td>
-                                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
+                                    <td className="px-4 py-3 font-mono text-xs leading-5 whitespace-nowrap">
                                         {movement.from?.code ?? '—'} →{' '}
                                         {movement.to?.code ?? '—'}
                                     </td>
@@ -441,7 +440,7 @@ export default function StockMovements({
                                             )}
                                         </td>
                                     )}
-                                    <td className="px-4 py-3 text-muted-foreground">
+                                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                         {movement.performed_by ?? '—'}
                                     </td>
                                     <td className="px-4 py-3">

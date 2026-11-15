@@ -431,7 +431,7 @@ export default function PurchaseOrderShow({
                                                 )}
                                             </td>
                                             <td
-                                                className="px-4 py-3 font-mono text-xs"
+                                                className="px-4 py-3 font-mono text-xs leading-5"
                                                 title={receipt.warehouse.name}
                                             >
                                                 {receipt.warehouse.code}
