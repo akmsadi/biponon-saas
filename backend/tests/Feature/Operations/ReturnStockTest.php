@@ -129,6 +129,14 @@ class ReturnStockTest extends TestCase
         $this->assertNothingReturned();
     }
 
+    public function test_an_empty_serials_box_counts_as_no_serials(): void
+    {
+        $this->returnStock([['product_variant_id' => $this->variant->id, 'quantity' => 3, 'serials' => '']])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(3, $this->balance());
+    }
+
     /**
      * @param  list<array<string, mixed>>  $lines
      */

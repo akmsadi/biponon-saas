@@ -99,6 +99,9 @@ class ReturnStockRequest extends FormRequest
                         array_map('trim', preg_split('/\r\n|\r|\n/', $line['serials'])),
                         fn (string $serial): bool => $serial !== '',
                     ));
+                } elseif (is_array($line) && ($line['serials'] ?? null) === null) {
+                    // An empty serials box arrives as null (ConvertEmptyStringsToNull): no serials.
+                    $line['serials'] = [];
                 }
 
                 return $line;

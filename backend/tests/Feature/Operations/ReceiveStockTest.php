@@ -207,6 +207,15 @@ class ReceiveStockTest extends TestCase
         $this->assertNothingReceived();
     }
 
+    public function test_an_empty_serials_box_counts_as_no_serials(): void
+    {
+        $this->receive([['product_variant_id' => $this->variant->id, 'quantity' => 4, 'serials' => '']])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(4, $this->balance($this->variant));
+        $this->assertSame(0, SerialNumber::count());
+    }
+
     /**
      * @param  list<array<string, mixed>>  $lines
      */
