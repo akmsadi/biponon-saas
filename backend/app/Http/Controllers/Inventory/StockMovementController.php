@@ -1,0 +1,236 @@
+<?php
+
+namespace App\Http\Controllers\Inventory;
+
+use App\Concerns\ParsesDateFilters;
+use App\Concerns\ScopesToOrganization;
+use App\Concerns\StreamsCsv;
+use App\Http\Controllers\Controller;
+use App\Models\Organization;
+use App\Models\SerialNumber;
+use App\Models\StockMovement;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+/**
+ * The read-only stock ledger: every movement into, out of, or between warehouses, newest first.
+ */
+class StockMovementController extends Controller
+{
+    use ParsesDateFilters;
+    use ScopesToOrganization;
+    use StreamsCsv;
+
+    private const PER_PAGE = 25;
+
+    /**
+     * List the organization's movements, filtered by search, type, warehouse, product and date range.
+     */
+    public function index(Request $request): Response
+    {
+        $organization = $this->organization($request);
+        $filters = $this->filters($request);
+        $canSeeCosts = $this->roleIncludes($request, 'manager');
+
+        $movements = $this->filteredQuery($organization, $filters)
+            ->withCount('serialNumbers')
+            ->paginate(self::PER_PAGE)
+            ->withQueryString()
+            ->through(fn (StockMovement $movement): array => [
+                'id' => $movement->id,
+                'movement_type' => $movement->movement_type,
+                'quantity' => $movement->quantity,
+                'direction' => $this->direction($movement, $filters['warehouse']),
+                'product' => ['id' => $movement->product_id, 'name' => $movement->product_name],
+                'sku' => $movement->sku,
+                'size' => $movement->size,
+                'color' => $movement->color,
+                'hex_code' => $movement->hex_code,
+                'from' => $movement->from_code === null ? null : ['name' => $movement->from_name, 'code' => $movement->from_code],
+                'to' => $movement->to_code === null ? null : ['name' => $movement->to_name, 'code' => $movement->to_code],
+                'performed_by' => $movement->performer_name,
+                'notes' => $movement->notes,
+                'serial_count' => $movement->serial_numbers_count,
+                'purchase_order' => $movement->purchase_order_number === null
+                    ? null
+                    : ['id' => $movement->purchase_order_id, 'number' => $movement->purchase_order_number],
+                'sales_order' => $movement->sales_order_number === null
+                    ? null
+                    : ['id' => $movement->sales_order_id, 'number' => $movement->sales_order_number],
+                ...($canSeeCosts ? ['unit_cost' => $movement->unit_cost] : []),
+                'occurred_at' => $movement->occurred_at->toIso8601String(),
+            ]);
+
+        return Inertia::render('inventory/movements', [
+            'movements' => $movements,
+            'warehouses' => $organization->warehouses()->orderBy('name')->get(['id', 'name', 'code']),
+            'types' => $organization->stockMovements()->distinct()->orderBy('movement_type')->pluck('movement_type'),
+            'product' => $filters['product'] === null
+                ? null
+                : $organization->products()->whereKey($filters['product'])->first(['id', 'name']),
+            'filters' => [
+                ...Arr::except($filters, 'tz'),
+                'date_from' => $filters['date_from']?->toDateString(),
+                'date_to' => $filters['date_to']?->toDateString(),
+            ],
+            'canSeeCosts' => $canSeeCosts,
+        ]);
+    }
+
+    /**
+     * Download every movement matching the current filters as CSV, with dates in the organization's timezone.
+     * The unit cost column is included only for managers and admins.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $organization = $this->organization($request);
+        $filters = $this->filters($request);
+        $canSeeCosts = $this->roleIncludes($request, 'manager');
+        $query = $this->filteredQuery($organization, $filters)->with('serialNumbers:id,serial_number');
+        $filename = 'stock-movements-'.now($filters['tz'])->format('Ymd-His').'.csv';
+
+        $header = [
+            'Date', 'Type', 'Product', 'Size', 'Color', 'SKU', 'From', 'To', 'Quantity',
+            ...($canSeeCosts ? ['Unit cost'] : []),
+            'Reference', 'Performed by', 'Serials', 'Notes',
+        ];
+
+        return $this->streamCsv($filename, $header, function () use ($query, $filters, $canSeeCosts): iterable {
+            foreach ($query->lazy(500) as $movement) {
+                yield [
+                    $movement->occurred_at->setTimezone($filters['tz'])->format('Y-m-d H:i'),
+                    $movement->movement_type,
+                    $movement->product_name,
+                    $movement->size,
+                    $movement->color,
+                    $movement->sku,
+                    $movement->from_code ?? '',
+                    $movement->to_code ?? '',
+                    $movement->quantity,
+                    ...($canSeeCosts ? [$movement->unit_cost ?? ''] : []),
+                    $movement->purchase_order_number ?? $movement->sales_order_number ?? '',
+                    $movement->performer_name ?? '',
+                    $movement->serialNumbers->pluck('serial_number')->implode(' '),
+                    $movement->notes ?? '',
+                ];
+            }
+        });
+    }
+
+    /**
+     * The serial numbers that took part in one movement, as JSON for the serials dialog.
+     */
+    public function serials(Request $request, StockMovement $stockMovement): JsonResponse
+    {
+        $this->ensureBelongsToOrganization($request, $stockMovement);
+
+        return response()->json([
+            'serials' => $stockMovement->serialNumbers()
+                ->orderBy('serial_number')
+                ->get(['serial_numbers.id', 'serial_number', 'status'])
+                ->map(fn (SerialNumber $serial): array => $serial->only(['id', 'serial_number', 'status'])),
+        ]);
+    }
+
+    /**
+     * Read the filters from the query string, ignoring anything malformed. Dates are whole days in the
+     * organization's timezone.
+     *
+     * @return array{search: string, type: ?string, warehouse: ?int, product: ?int, date_from: ?Carbon, date_to: ?Carbon, tz: string}
+     */
+    private function filters(Request $request): array
+    {
+        $timezone = $this->organization($request)->setting('timezone');
+
+        return [
+            'search' => mb_substr(trim($request->string('search')->toString()), 0, 100),
+            'type' => mb_substr($request->string('type')->toString(), 0, 30) ?: null,
+            'warehouse' => $request->integer('warehouse') ?: null,
+            'product' => $request->integer('product') ?: null,
+            'date_from' => $this->parseDate($request->string('date_from')->toString(), $timezone)?->startOfDay(),
+            'date_to' => $this->parseDate($request->string('date_to')->toString(), $timezone)?->endOfDay(),
+            'tz' => $timezone,
+        ];
+    }
+
+    /**
+     * The organization's movements joined to their variant, warehouses and performer, with the filters applied.
+     *
+     * @param  array{search: string, type: ?string, warehouse: ?int, product: ?int, date_from: ?Carbon, date_to: ?Carbon, tz: string}  $filters
+     * @return Builder<StockMovement>
+     */
+    private function filteredQuery(Organization $organization, array $filters): Builder
+    {
+        return StockMovement::query()
+            ->where('stock_movements.organization_id', $organization->id)
+            ->join('product_variants', 'product_variants.id', '=', 'stock_movements.product_variant_id')
+            ->join('products', 'products.id', '=', 'product_variants.product_id')
+            ->join('sizes', 'sizes.id', '=', 'product_variants.size_id')
+            ->join('colors', 'colors.id', '=', 'product_variants.color_id')
+            ->leftJoin('warehouses as from_warehouses', 'from_warehouses.id', '=', 'stock_movements.from_warehouse_id')
+            ->leftJoin('warehouses as to_warehouses', 'to_warehouses.id', '=', 'stock_movements.to_warehouse_id')
+            ->leftJoin('users as performers', 'performers.id', '=', 'stock_movements.performed_by')
+            ->leftJoin('purchase_order_lines', 'purchase_order_lines.id', '=', 'stock_movements.purchase_order_line_id')
+            ->leftJoin('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_lines.purchase_order_id')
+            ->leftJoin('sales_order_lines', 'sales_order_lines.id', '=', 'stock_movements.sales_order_line_id')
+            ->leftJoin('sales_orders', 'sales_orders.id', '=', 'sales_order_lines.sales_order_id')
+            ->when($filters['type'], fn (Builder $query, string $type) => $query->where('stock_movements.movement_type', $type))
+            ->when($filters['product'], fn (Builder $query, int $productId) => $query->where('products.id', $productId))
+            ->when($filters['warehouse'], fn (Builder $query, int $warehouseId) => $query->where(fn (Builder $query) => $query
+                ->where('stock_movements.from_warehouse_id', $warehouseId)
+                ->orWhere('stock_movements.to_warehouse_id', $warehouseId)))
+            ->when($filters['date_from'], fn (Builder $query, Carbon $from) => $query->where('stock_movements.occurred_at', '>=', $from->copy()->utc()))
+            ->when($filters['date_to'], fn (Builder $query, Carbon $to) => $query->where('stock_movements.occurred_at', '<=', $to->copy()->utc()))
+            ->when($filters['search'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->where('products.name', 'like', '%'.$filters['search'].'%')
+                ->orWhere('product_variants.sku', 'like', '%'.$filters['search'].'%')
+                ->orWhere('purchase_orders.number', 'like', '%'.$filters['search'].'%')
+                ->orWhere('sales_orders.number', 'like', '%'.$filters['search'].'%')))
+            ->orderByDesc('stock_movements.occurred_at')
+            ->orderByDesc('stock_movements.id')
+            ->select([
+                'stock_movements.id',
+                'stock_movements.movement_type',
+                'stock_movements.quantity',
+                'stock_movements.unit_cost',
+                'stock_movements.from_warehouse_id',
+                'stock_movements.to_warehouse_id',
+                'stock_movements.notes',
+                'stock_movements.occurred_at',
+                'products.id as product_id',
+                'products.name as product_name',
+                'product_variants.sku',
+                'sizes.name as size',
+                'colors.name as color',
+                'colors.hex_code',
+                'from_warehouses.name as from_name',
+                'from_warehouses.code as from_code',
+                'to_warehouses.name as to_name',
+                'to_warehouses.code as to_code',
+                'performers.name as performer_name',
+                'purchase_orders.id as purchase_order_id',
+                'purchase_orders.number as purchase_order_number',
+                'sales_orders.id as sales_order_id',
+                'sales_orders.number as sales_order_number',
+            ]);
+    }
+
+    /**
+     * Whether the movement brought stock into or out of the filtered warehouse; null without a warehouse filter.
+     */
+    private function direction(StockMovement $movement, ?int $warehouseId): ?string
+    {
+        return match (true) {
+            $warehouseId === null => null,
+            (int) $movement->to_warehouse_id === $warehouseId => 'in',
+            (int) $movement->from_warehouse_id === $warehouseId => 'out',
+            default => null,
+        };
+    }
+}
