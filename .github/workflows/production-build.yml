@@ -1,0 +1,91 @@
+# Builds the app on every push to main and publishes a ready-to-run copy to the `production`
+# branch: the backend's tracked files plus vendor/ (no dev packages) and public/build. The cPanel
+# server has no composer or npm, so it only pulls that branch (see docs/DEPLOYMENT.md).
+name: Production build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, bcmath, zip, pdo_sqlite, pdo_mysql
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install PHP packages (with dev tools, for the tests)
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare a throwaway environment file
+        run: cp .env.example .env && php artisan key:generate --no-interaction
+
+      - name: Install JavaScript packages
+        run: npm ci
+
+      - name: Build the frontend
+        run: npm run build
+        env:
+          # Baked into the JavaScript at build time (browser tab titles).
+          VITE_APP_NAME: Biponon
+
+      - name: Run the tests
+        run: php artisan test --compact
+
+      - name: Reinstall PHP packages without dev tools
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
+
+      - name: Publish to the production branch
+        working-directory: .
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Check out the existing production branch next to the workspace, or start it.
+          if git fetch --depth=1 origin production; then
+            git worktree add -B production ../release FETCH_HEAD
+          else
+            git worktree add --detach ../release
+            git -C ../release checkout --orphan production
+          fi
+
+          # Replace everything with this build.
+          find ../release -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          git ls-files -z -- backend .cpanel.yml ':!backend/tests' \
+            | rsync -a --from0 --files-from=- ./ ../release/
+          rsync -a backend/vendor/ ../release/backend/vendor/
+          rsync -a backend/public/build/ ../release/backend/public/build/
+          cp .github/deploy/production.gitignore ../release/.gitignore
+
+          cd ../release
+          git add --all --force .
+          if git diff --cached --quiet; then
+            echo "Nothing changed since the last build."
+            exit 0
+          fi
+          git commit --quiet -m "Build of ${GITHUB_SHA::7}: $(git -C "$GITHUB_WORKSPACE" log -1 --format=%s | cut -c1-150)"
+          git push origin production

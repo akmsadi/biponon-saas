@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\OrganizationInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -197,6 +198,35 @@ class OrganizationManagementTest extends TestCase
         $this->assertFalse($user->fresh()->isSuperAdmin());
 
         $this->artisan('biponon:super-admin', ['email' => 'nobody@example.com'])->assertFailed();
+    }
+
+    public function test_the_command_can_create_the_first_super_admin(): void
+    {
+        $this->artisan('biponon:super-admin', ['email' => 'Owner@Example.com', '--create' => true])
+            ->expectsQuestion('Name', 'Platform Owner')
+            ->expectsQuestion('Password', 'a-long-secret-1')
+            ->expectsQuestion('Password again', 'a-long-secret-1')
+            ->assertSuccessful();
+
+        $user = User::firstWhere('email', 'owner@example.com');
+        $this->assertNotNull($user);
+        $this->assertTrue($user->isSuperAdmin());
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertTrue(Hash::check('a-long-secret-1', $user->password));
+
+        $this->post(route('login.store'), ['email' => 'owner@example.com', 'password' => 'a-long-secret-1']);
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_the_command_refuses_mismatched_passwords_when_creating(): void
+    {
+        $this->artisan('biponon:super-admin', ['email' => 'owner@example.com', '--create' => true])
+            ->expectsQuestion('Name', 'Platform Owner')
+            ->expectsQuestion('Password', 'a-long-secret-1')
+            ->expectsQuestion('Password again', 'something-else')
+            ->assertFailed();
+
+        $this->assertDatabaseMissing('users', ['email' => 'owner@example.com']);
     }
 
     public function test_the_super_admin_flag_cannot_be_mass_assigned(): void

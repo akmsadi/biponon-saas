@@ -62,6 +62,10 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Folder holding mysqldump for backups; empty means it's on the PATH.
+            'dump' => [
+                'dump_binary_path' => env('DB_DUMP_PATH', ''),
+            ],
         ],
 
         'mariadb' => [

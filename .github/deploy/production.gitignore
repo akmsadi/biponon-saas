@@ -1,0 +1,6 @@
+# .gitignore of the `production` branch (copied there by .github/workflows/production-build.yml).
+# vendor/ and public/build ARE committed on that branch; only server-only files stay out.
+/backend/.env
+/backend/public/hot
+/backend/public/storage
+/backend/storage/*.key

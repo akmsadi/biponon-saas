@@ -1,0 +1,8 @@
+# Run by cPanel → Git Version Control → "Deploy HEAD Commit" on the `production` branch clone
+# at ~/biponon (see docs/DEPLOYMENT.md). The files are already in place after "Update from Remote";
+# this applies database changes and rebuilds Laravel's caches.
+---
+deployment:
+  tasks:
+    - cd "$HOME/biponon/backend" && php artisan migrate --force --no-interaction
+    - cd "$HOME/biponon/backend" && php artisan optimize
