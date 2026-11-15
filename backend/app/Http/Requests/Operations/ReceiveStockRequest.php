@@ -110,6 +110,9 @@ class ReceiveStockRequest extends FormRequest
             'lines' => array_map(function (mixed $line): mixed {
                 if (is_array($line) && is_string($line['serials'] ?? null)) {
                     $line['serials'] = self::splitSerials($line['serials']);
+                } elseif (is_array($line) && ($line['serials'] ?? null) === null) {
+                    // An empty serials box arrives as null (ConvertEmptyStringsToNull): no serials.
+                    $line['serials'] = [];
                 }
 
                 return $line;
