@@ -123,4 +123,22 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Local Seed Account
+    |--------------------------------------------------------------------------
+    |
+    | The super-admin that `php artisan db:seed` creates on a development
+    | machine. Set these only in your own .env, never in the repository; the
+    | seeders skip the account (and the sample data that needs it) when they
+    | are empty. On a server, use `php artisan biponon:super-admin --create`.
+    |
+    */
+
+    'seed_admin' => [
+        'name' => env('SEED_ADMIN_NAME', 'Admin'),
+        'email' => env('SEED_ADMIN_EMAIL'),
+        'password' => env('SEED_ADMIN_PASSWORD'),
+    ],
+
 ];

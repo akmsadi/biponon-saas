@@ -98,9 +98,15 @@ class DemoInventorySeeder extends Seeder
 
     public function run(): void
     {
-        $admin = User::where('email', 'akmsadi.cste@gmail.com')->firstOrFail();
+        $admin = User::firstWhere('email', config('app.seed_admin.email'));
+        $biponon = Organization::firstWhere('slug', 'biponon');
 
-        $biponon = Organization::where('slug', 'biponon')->firstOrFail();
+        // Both come from AdminUserSeeder, which skips them when SEED_ADMIN_* is not set.
+        if ($admin === null || $biponon === null) {
+            $this->command?->warn('Skipping sample inventory: it needs the admin account from AdminUserSeeder.');
+
+            return;
+        }
         $acme = $this->createOrganization('Acme Traders', 'acme-traders', $admin);
 
         $this->attachMember($acme, $admin, 'admin');
