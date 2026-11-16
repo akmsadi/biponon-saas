@@ -114,7 +114,8 @@ class DashboardController extends Controller
             ->join('sizes', 'sizes.id', '=', 'product_variants.size_id')
             ->join('colors', 'colors.id', '=', 'product_variants.color_id')
             ->join('warehouses', 'warehouses.id', '=', 'stock_balances.warehouse_id')
-            ->orderByRaw('stock_balances.quantity - product_variants.reorder_level')
+            // Both columns are unsigned: MySQL refuses a negative unsigned result, so subtract as signed numbers.
+            ->orderByRaw('CAST(stock_balances.quantity AS SIGNED) - CAST(product_variants.reorder_level AS SIGNED)')
             ->orderBy('products.name')
             ->limit(self::LIST_SIZE)
             ->get([
