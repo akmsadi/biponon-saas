@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { DemoPanel } from '@/components/demo-panel';
 import { DashboardPreview } from '@/components/landing/dashboard-preview';
+import { RequestAccessForm } from '@/components/landing/request-access-form';
 import { Button } from '@/components/ui/button';
 import type { LandingLanguage } from '@/hooks/use-landing-language';
 import { useLandingLanguage } from '@/hooks/use-landing-language';
@@ -242,13 +243,18 @@ export default function Welcome() {
                         id="request-access"
                         className="scroll-mt-16 border-t bg-muted/40"
                     >
-                        <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 sm:py-24">
-                            <h2 className="text-3xl font-semibold tracking-tight text-balance">
-                                {copy.requestAccess.title}
-                            </h2>
-                            <p className="mt-3 text-muted-foreground">
-                                {copy.requestAccess.body}
-                            </p>
+                        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+                            <div className="text-center">
+                                <h2 className="text-3xl font-semibold tracking-tight text-balance">
+                                    {copy.requestAccess.title}
+                                </h2>
+                                <p className="mt-3 text-muted-foreground">
+                                    {copy.requestAccess.body}
+                                </p>
+                            </div>
+                            <div className="relative mt-10">
+                                <RequestAccessForm language={language} />
+                            </div>
                         </div>
                     </section>
                 </main>

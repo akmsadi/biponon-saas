@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AccessRequest;
 use App\Models\Organization;
 use App\Models\PlatformSetting;
 use Illuminate\Http\Request;
@@ -58,6 +59,11 @@ class HandleInertiaRequests extends Middleware
             'organizationTimezone' => fn () => $request->attributes->get('organization')?->setting('timezone'),
             // ISO 4217 code that organization pages show money in.
             'organizationCurrency' => fn () => $request->attributes->get('organization')?->setting('currency'),
+
+            // Unanswered landing page requests, counted next to "Access requests" in a super-admin's menu.
+            'newAccessRequests' => fn () => $user?->isSuperAdmin()
+                ? AccessRequest::query()->where('status', 'new')->count()
+                : 0,
 
             // Demo mode adds a "how this is built" panel to every page, for showing the app to clients.
             'demoMode' => fn () => PlatformSetting::demoMode(),

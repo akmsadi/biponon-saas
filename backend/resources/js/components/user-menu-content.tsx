@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Building2, LogOut, Settings } from 'lucide-react';
+import { Building2, Inbox, LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,6 +9,7 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
+import { index as adminAccessRequestsIndex } from '@/routes/admin/access-requests';
 import { index as adminOrganizationsIndex } from '@/routes/admin/organizations';
 import { edit } from '@/routes/profile';
 import type { NavItem, User } from '@/types';
@@ -26,6 +27,11 @@ const platformItems: NavItem[] = [
         href: adminOrganizationsIndex(),
         icon: Building2,
     },
+    {
+        title: 'Access requests',
+        href: adminAccessRequestsIndex(),
+        icon: Inbox,
+    },
 ];
 
 /**
@@ -34,7 +40,8 @@ const platformItems: NavItem[] = [
  */
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
-    const { can } = usePage().props.auth;
+    const { auth, newAccessRequests } = usePage().props;
+    const { can } = auth;
 
     const handleLogout = () => {
         cleanup();
@@ -55,7 +62,7 @@ export function UserMenuContent({ user }: Props) {
                         {platformItems.map((item) => (
                             <DropdownMenuItem key={item.title} asChild>
                                 <Link
-                                    className="block w-full cursor-pointer"
+                                    className="flex w-full cursor-pointer items-center"
                                     href={item.href}
                                     prefetch
                                     onClick={cleanup}
@@ -64,6 +71,16 @@ export function UserMenuContent({ user }: Props) {
                                         <item.icon className="mr-2" />
                                     )}
                                     {item.title}
+                                    {item.title === 'Access requests' &&
+                                        newAccessRequests > 0 && (
+                                            <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground tabular-nums">
+                                                {newAccessRequests}
+                                                <span className="sr-only">
+                                                    {' '}
+                                                    new
+                                                </span>
+                                            </span>
+                                        )}
                                 </Link>
                             </DropdownMenuItem>
                         ))}

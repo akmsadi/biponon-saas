@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AccessRequestController;
+use App\Http\Controllers\Admin\AccessRequestController as AdminAccessRequestController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Catalog\ColorController;
 use App\Http\Controllers\Catalog\ProductController;
@@ -34,6 +36,8 @@ use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+// The landing page's request access form; rate limited per visitor in the controller.
+Route::post('access-requests', [AccessRequestController::class, 'store'])->name('access-requests.store');
 
 Route::get('invitations/{token}', [InvitationAcceptanceController::class, 'show'])->name('invitations.show');
 Route::post('invitations/{token}/register', [InvitationAcceptanceController::class, 'register'])
@@ -53,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('organizations/{organization}/admin-invitation', [AdminOrganizationController::class, 'inviteAdmin'])
             ->middleware('throttle:20,1')
             ->name('organizations.admin-invitation');
+        Route::resource('access-requests', AdminAccessRequestController::class)->only(['index', 'update', 'destroy']);
     });
 
     // Everything that shows organization data goes in here

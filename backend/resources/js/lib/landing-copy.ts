@@ -47,6 +47,21 @@ type LandingCopy = {
         items: { title: string; body: string }[];
     };
     requestAccess: { title: string; body: string };
+    form: {
+        name: string;
+        company: string;
+        email: string;
+        phone: string;
+        message: string;
+        optional: string;
+        submit: string;
+        sending: string;
+        thanksTitle: string;
+        thanksBody: string;
+        tooManyAttempts: string;
+        /** Shown under a field the server rejected, in Bangla only; English shows the server's own message. */
+        invalidField: string;
+    };
     footer: { rights: string };
 };
 
@@ -139,6 +154,22 @@ export const landingCopy: Record<LandingLanguage, LandingCopy> = {
             title: 'Ready to get organized?',
             body: "Tell us a little about your business. We'll set up your organization and send you an invitation.",
         },
+        form: {
+            name: 'Your name',
+            company: 'Company',
+            email: 'Email',
+            phone: 'Phone',
+            message: 'Anything we should know?',
+            optional: 'optional',
+            submit: 'Request access',
+            sending: 'Sending…',
+            thanksTitle: "Thanks, we'll be in touch",
+            thanksBody:
+                "We've received your request and will contact you soon to set up your organization.",
+            tooManyAttempts:
+                'Too many attempts. Please wait a minute and try again.',
+            invalidField: 'Please check this field.',
+        },
         footer: { rights: 'All rights reserved.' },
     },
     bn: {
@@ -225,6 +256,21 @@ export const landingCopy: Record<LandingLanguage, LandingCopy> = {
         requestAccess: {
             title: 'গুছিয়ে নিতে প্রস্তুত?',
             body: 'আপনার ব্যবসা সম্পর্কে একটু জানান। আমরা আপনার প্রতিষ্ঠান সেটআপ করে আপনাকে আমন্ত্রণ পাঠাব।',
+        },
+        form: {
+            name: 'আপনার নাম',
+            company: 'প্রতিষ্ঠানের নাম',
+            email: 'ইমেইল',
+            phone: 'ফোন',
+            message: 'আর কিছু জানাতে চান?',
+            optional: 'ঐচ্ছিক',
+            submit: 'অ্যাক্সেসের অনুরোধ পাঠান',
+            sending: 'পাঠানো হচ্ছে…',
+            thanksTitle: 'ধন্যবাদ, আমরা শিগগিরই যোগাযোগ করব',
+            thanksBody:
+                'আপনার অনুরোধ আমরা পেয়েছি। আপনার প্রতিষ্ঠান সেটআপ করতে শিগগিরই আপনার সঙ্গে যোগাযোগ করব।',
+            tooManyAttempts: 'অনেকবার চেষ্টা করা হয়েছে। এক মিনিট পর আবার চেষ্টা করুন।',
+            invalidField: 'এই তথ্যটি আবার দেখুন।',
         },
         footer: { rights: 'সর্বস্বত্ব সংরক্ষিত।' },
     },
