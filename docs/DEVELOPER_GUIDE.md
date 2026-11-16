@@ -65,7 +65,7 @@ You need PHP 8.3 or newer, Composer, Node.js 22 and MySQL 8 (SQLite works for a 
 5. Start everything: `composer run dev` (runs `php artisan dev`: web server, queue, logs and Vite together). Or run `php artisan serve` and `npm run dev` yourself.
 6. After changing routes or controllers, regenerate the typed routes: `php artisan wayfinder:generate --with-form`. The Vite plugin also does this while `npm run dev` runs.
 
-Don't use `php artisan db:seed` on a fresh machine: `DatabaseSeeder` creates the project owner's account, and `DemoInventorySeeder` expects that account and an existing organization.
+`php artisan db:seed` is optional. It creates a local super-admin and a "Biponon" organization with sample stock only when `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` are set in your own `.env`; otherwise it skips them. Never put real login details in the repository.
 
 ## Code layout and conventions
 
