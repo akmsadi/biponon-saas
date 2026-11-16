@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\AccessRequest;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -37,6 +38,8 @@ class OrganizationRequest extends FormRequest
 
         if ($organization === null) {
             $rules['admin_email'] = ['required', 'string', 'email', 'max:255'];
+            // Set when the organization is created from a landing page access request, which is then closed.
+            $rules['access_request_id'] = ['nullable', 'integer', Rule::exists(AccessRequest::class, 'id')];
         } else {
             $rules['status'] = ['required', 'string', Rule::in(Organization::STATUSES)];
         }

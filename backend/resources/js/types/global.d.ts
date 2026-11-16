@@ -15,6 +15,8 @@ declare module '@inertiajs/core' {
             canRegister: boolean;
             organizationTimezone: string | null;
             organizationCurrency: string | null;
+            demoMode: boolean;
+            newAccessRequests: number;
             [key: string]: unknown;
         };
     }

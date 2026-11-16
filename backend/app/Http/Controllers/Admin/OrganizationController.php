@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\Organizations\SendInvitation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\OrganizationRequest;
+use App\Models\AccessRequest;
 use App\Models\Organization;
 use App\Models\OrganizationInvitation;
 use App\Models\User;
@@ -57,6 +58,8 @@ class OrganizationController extends Controller
         return Inertia::render('admin/organizations', [
             'organizations' => $organizations,
             'filters' => ['search' => $search],
+            // "Create organization" on an access request opens the create dialog filled in from it.
+            'prefill' => $this->prefillFromAccessRequest($request),
         ]);
     }
 
@@ -78,6 +81,11 @@ class OrganizationController extends Controller
         $invitation->setRelation('organization', $organization);
 
         Inertia::flash('invitationLink', $sendInvitation->handle($invitation, $request->user()));
+
+        if ($request->filled('access_request_id')) {
+            AccessRequest::query()->whereKey($request->validated('access_request_id'))->update(['status' => 'closed']);
+        }
+
         Inertia::flash('toast', ['type' => 'success', 'message' => __(':name created. Invitation sent to :email.', [
             'name' => $organization->name,
             'email' => $invitation->email,
@@ -130,6 +138,27 @@ class OrganizationController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Invitation sent to :email.', ['email' => $invitation->email])]);
 
         return back();
+    }
+
+    /**
+     * @return array{access_request_id: int, name: string, admin_email: string}|null
+     */
+    private function prefillFromAccessRequest(Request $request): ?array
+    {
+        // Closed requests are done (creating from one closes it), so they never reopen the dialog.
+        $accessRequest = AccessRequest::query()
+            ->where('status', '!=', 'closed')
+            ->find($request->integer('from_request'));
+
+        if ($accessRequest === null) {
+            return null;
+        }
+
+        return [
+            'access_request_id' => $accessRequest->id,
+            'name' => $accessRequest->company,
+            'admin_email' => $accessRequest->email,
+        ];
     }
 
     /**

@@ -1,1 +1,0 @@
-import{t as e}from"./createLucideIcon-CJwUSUsJ.js";var t=e(`Ban`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}],[`path`,{d:`m4.9 4.9 14.2 14.2`,key:`1m5liu`}]]),n=e(`CircleStop`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}],[`rect`,{x:`9`,y:`9`,width:`6`,height:`6`,rx:`1`,key:`1ssd4o`}]]);export{t as n,n as t};

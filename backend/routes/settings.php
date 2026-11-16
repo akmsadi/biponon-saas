@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SiteModeController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    // Site-wide production / demo switch, shown on the appearance page to super-admins only.
+    Route::put('settings/site-mode', [SiteModeController::class, 'update'])
+        ->middleware('can:super-admin')
+        ->name('site-mode.update');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

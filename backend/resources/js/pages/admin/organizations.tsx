@@ -43,9 +43,17 @@ type Organization = {
     } | null;
 };
 
+/** Filled in from a landing page access request ("Create organization" on Access requests). */
+type Prefill = {
+    access_request_id: number;
+    name: string;
+    admin_email: string;
+};
+
 type Props = {
     organizations: Paginated<Organization>;
     filters: { search: string };
+    prefill: Prefill | null;
 };
 
 function formatDate(value: string | null): string {
@@ -70,9 +78,13 @@ function slugify(value: string): string {
         .replace(/^-+|-+$/g, '');
 }
 
-export default function Organizations({ organizations, filters }: Props) {
+export default function Organizations({
+    organizations,
+    filters,
+    prefill,
+}: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [creating, setCreating] = useState(false);
+    const [creating, setCreating] = useState(prefill !== null);
     const [editing, setEditing] = useState<Organization | null>(null);
     const [invitingAdmin, setInvitingAdmin] = useState<Organization | null>(
         null,
@@ -256,7 +268,23 @@ export default function Organizations({ organizations, filters }: Props) {
 
             <CreateOrganizationDialog
                 open={creating}
-                onClose={() => setCreating(false)}
+                prefill={prefill}
+                onClose={() => {
+                    setCreating(false);
+
+                    // Drop ?from_request so a reload doesn't fill the form in again.
+                    if (prefill) {
+                        router.get(
+                            index.url(),
+                            filters.search ? { search: filters.search } : {},
+                            {
+                                preserveState: true,
+                                preserveScroll: true,
+                                replace: true,
+                            },
+                        );
+                    }
+                }}
                 onCreated={showLink}
             />
 
@@ -456,15 +484,17 @@ function AdminCell({ organization }: { organization: Organization }) {
 
 function CreateOrganizationDialog({
     open,
+    prefill,
     onClose,
     onCreated,
 }: {
     open: boolean;
+    prefill: Prefill | null;
     onClose: () => void;
     onCreated: (flash: Record<string, unknown>) => void;
 }) {
-    const [name, setName] = useState('');
-    const [slug, setSlug] = useState('');
+    const [name, setName] = useState(prefill?.name ?? '');
+    const [slug, setSlug] = useState(prefill ? slugify(prefill.name) : '');
     // The slug follows the name until it is edited by hand.
     const [slugEdited, setSlugEdited] = useState(false);
 
@@ -503,6 +533,13 @@ function CreateOrganizationDialog({
                 >
                     {({ processing, errors }) => (
                         <>
+                            {prefill && (
+                                <input
+                                    type="hidden"
+                                    name="access_request_id"
+                                    value={prefill.access_request_id}
+                                />
+                            )}
                             <div className="grid gap-2">
                                 <Label htmlFor="create-name">Name</Label>
                                 <Input
@@ -554,6 +591,7 @@ function CreateOrganizationDialog({
                                     type="email"
                                     required
                                     maxLength={255}
+                                    defaultValue={prefill?.admin_email}
                                     placeholder="owner@example.com"
                                 />
                                 <InputError message={errors.admin_email} />
