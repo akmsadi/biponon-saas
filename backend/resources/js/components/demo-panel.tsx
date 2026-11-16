@@ -19,15 +19,24 @@ const HIGHLIGHT =
     'bg-[linear-gradient(transparent_45%,var(--color-amber-300)_45%)] box-decoration-clone px-1 text-inherit dark:bg-[linear-gradient(transparent_45%,var(--color-amber-700)_45%)]';
 
 /**
- * A full-width bar stuck to the bottom of the screen on every page while a super-admin has the
- * site in demo mode: the technology behind Biponon and, where written, how the current page
+ * A full-width bar stuck to the bottom of the screen: on the landing and login pages while the
+ * site is in demo mode, and inside the app for the shared demo accounts. It shows the technology behind Biponon and, where written, how the current page
  * works. It is sticky rather than fixed, so inside the app it stays in the content column and
  * never covers the sidebar, and it takes up its own space so it never hides the page's end.
  */
-export function DemoPanel({ className }: { className?: string }) {
+export function DemoPanel({
+    className,
+    inApp = false,
+}: {
+    className?: string;
+    /** Inside the app it is shown to the shared demo accounts only; elsewhere it follows the site mode. */
+    inApp?: boolean;
+}) {
     const { component, props } = usePage();
 
-    if (!props.demoMode) {
+    const visible = inApp ? props.auth.user?.is_demo === true : props.demoMode;
+
+    if (!visible) {
         return null;
     }
 

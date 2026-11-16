@@ -133,6 +133,20 @@ class DemoCompanyTest extends TestCase
         $this->assertTrue($organization->users()->whereKey($staff->id)->exists());
     }
 
+    public function test_app_pages_flag_demo_accounts_so_only_they_see_the_demo_panel(): void
+    {
+        $this->artisan('biponon:demo')->assertSuccessful();
+        PlatformSetting::put('demo_mode', true);
+
+        $this->actingAs(User::firstWhere('email', BuildDemoCompany::ACCOUNTS['member']['email']))
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('auth.user.is_demo', true));
+
+        $this->actingAs(User::factory()->withOrganization(Organization::factory()->create())->create())
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('auth.user.is_demo', false));
+    }
+
     public function test_other_users_are_not_restricted(): void
     {
         PlatformSetting::put('demo_mode', true);

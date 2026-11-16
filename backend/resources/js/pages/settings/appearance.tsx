@@ -27,7 +27,7 @@ export default function Appearance() {
                     <Heading
                         variant="small"
                         title="Site mode"
-                        description="For the whole site, not just your account. Demo adds a panel to the bottom of every page that explains the technology behind it, for showing Biponon to clients."
+                        description="For showing Biponon to clients. Demo adds a panel explaining the technology to the landing and login pages, and offers the demo accounts on the login page. Inside the app the panel is shown to demo accounts only, and they can log in only while the site is in demo mode."
                     />
                     <SiteModeTabs />
                 </div>
