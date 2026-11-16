@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Actions\Demo\BuildDemoCompany;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\PlatformSetting;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -51,6 +53,8 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
+            // In demo mode the form is filled in with a shared demo account, one button per role.
+            'demoAccounts' => PlatformSetting::demoMode() ? BuildDemoCompany::loginAccounts() : [],
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [

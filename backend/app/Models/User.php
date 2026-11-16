@@ -23,6 +23,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property bool $is_super_admin
+ * @property bool $is_demo
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -38,6 +39,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
+     * Defaults matching the database, so a freshly created user already carries them.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_demo' => false,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -48,8 +58,18 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_super_admin' => 'boolean',
+            'is_demo' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Shared demo accounts whose password is shown on the login page in demo mode. Never mass assignable; only
+     * `php artisan biponon:demo` sets it.
+     */
+    public function isDemo(): bool
+    {
+        return $this->is_demo === true;
     }
 
     /**
