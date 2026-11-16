@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PlatformSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -23,3 +24,12 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
 Schedule::command('backup:clean')->dailyAt('01:30')->timezone('Asia/Dhaka');
 Schedule::command('backup:run --only-db')->dailyAt('02:00')->timezone('Asia/Dhaka');
 Schedule::command('backup:monitor')->dailyAt('08:00')->timezone('Asia/Dhaka');
+
+/*
+ * While the site is in demo mode, visitors log in with the shared demo accounts; rebuilding the demo
+ * organization every night undoes whatever they changed.
+ */
+Schedule::command('biponon:demo --fresh')
+    ->dailyAt('03:00')
+    ->timezone('Asia/Dhaka')
+    ->when(fn (): bool => PlatformSetting::demoMode());

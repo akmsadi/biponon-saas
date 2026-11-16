@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'AllowDynamicProperties' => $vendorDir . '/symfony/polyfill-php82/Resources/stubs/AllowDynamicProperties.php',
+    'App\\Actions\\Demo\\BuildDemoCompany' => $baseDir . '/app/Actions/Demo/BuildDemoCompany.php',
     'App\\Actions\\Fortify\\CreateNewUser' => $baseDir . '/app/Actions/Fortify/CreateNewUser.php',
     'App\\Actions\\Fortify\\ResetUserPassword' => $baseDir . '/app/Actions/Fortify/ResetUserPassword.php',
     'App\\Actions\\Inventory\\AverageReceiptCosts' => $baseDir . '/app/Actions/Inventory/AverageReceiptCosts.php',
@@ -23,6 +24,7 @@ return array(
     'App\\Concerns\\ValidatesNewSerialNumbers' => $baseDir . '/app/Concerns/ValidatesNewSerialNumbers.php',
     'App\\Concerns\\ValidatesOutgoingSerialNumbers' => $baseDir . '/app/Concerns/ValidatesOutgoingSerialNumbers.php',
     'App\\Concerns\\ValidatesReturnedSerialNumbers' => $baseDir . '/app/Concerns/ValidatesReturnedSerialNumbers.php',
+    'App\\Console\\Commands\\DemoCommand' => $baseDir . '/app/Console/Commands/DemoCommand.php',
     'App\\Console\\Commands\\SuperAdminCommand' => $baseDir . '/app/Console/Commands/SuperAdminCommand.php',
     'App\\Http\\Controllers\\AccessRequestController' => $baseDir . '/app/Http/Controllers/AccessRequestController.php',
     'App\\Http\\Controllers\\Admin\\AccessRequestController' => $baseDir . '/app/Http/Controllers/Admin/AccessRequestController.php',
@@ -64,6 +66,7 @@ return array(
     'App\\Http\\Middleware\\EnsureOrganizationRole' => $baseDir . '/app/Http/Middleware/EnsureOrganizationRole.php',
     'App\\Http\\Middleware\\HandleAppearance' => $baseDir . '/app/Http/Middleware/HandleAppearance.php',
     'App\\Http\\Middleware\\HandleInertiaRequests' => $baseDir . '/app/Http/Middleware/HandleInertiaRequests.php',
+    'App\\Http\\Middleware\\RestrictDemoAccounts' => $baseDir . '/app/Http/Middleware/RestrictDemoAccounts.php',
     'App\\Http\\Middleware\\SetCurrentOrganization' => $baseDir . '/app/Http/Middleware/SetCurrentOrganization.php',
     'App\\Http\\Requests\\Admin\\OrganizationRequest' => $baseDir . '/app/Http/Requests/Admin/OrganizationRequest.php',
     'App\\Http\\Requests\\Catalog\\ColorRequest' => $baseDir . '/app/Http/Requests/Catalog/ColorRequest.php',

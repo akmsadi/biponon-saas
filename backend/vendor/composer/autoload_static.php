@@ -637,6 +637,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
 
     public static $classMap = array (
         'AllowDynamicProperties' => __DIR__ . '/..' . '/symfony/polyfill-php82/Resources/stubs/AllowDynamicProperties.php',
+        'App\\Actions\\Demo\\BuildDemoCompany' => __DIR__ . '/../..' . '/app/Actions/Demo/BuildDemoCompany.php',
         'App\\Actions\\Fortify\\CreateNewUser' => __DIR__ . '/../..' . '/app/Actions/Fortify/CreateNewUser.php',
         'App\\Actions\\Fortify\\ResetUserPassword' => __DIR__ . '/../..' . '/app/Actions/Fortify/ResetUserPassword.php',
         'App\\Actions\\Inventory\\AverageReceiptCosts' => __DIR__ . '/../..' . '/app/Actions/Inventory/AverageReceiptCosts.php',
@@ -653,6 +654,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         'App\\Concerns\\ValidatesNewSerialNumbers' => __DIR__ . '/../..' . '/app/Concerns/ValidatesNewSerialNumbers.php',
         'App\\Concerns\\ValidatesOutgoingSerialNumbers' => __DIR__ . '/../..' . '/app/Concerns/ValidatesOutgoingSerialNumbers.php',
         'App\\Concerns\\ValidatesReturnedSerialNumbers' => __DIR__ . '/../..' . '/app/Concerns/ValidatesReturnedSerialNumbers.php',
+        'App\\Console\\Commands\\DemoCommand' => __DIR__ . '/../..' . '/app/Console/Commands/DemoCommand.php',
         'App\\Console\\Commands\\SuperAdminCommand' => __DIR__ . '/../..' . '/app/Console/Commands/SuperAdminCommand.php',
         'App\\Http\\Controllers\\AccessRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/AccessRequestController.php',
         'App\\Http\\Controllers\\Admin\\AccessRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/AccessRequestController.php',
@@ -694,6 +696,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         'App\\Http\\Middleware\\EnsureOrganizationRole' => __DIR__ . '/../..' . '/app/Http/Middleware/EnsureOrganizationRole.php',
         'App\\Http\\Middleware\\HandleAppearance' => __DIR__ . '/../..' . '/app/Http/Middleware/HandleAppearance.php',
         'App\\Http\\Middleware\\HandleInertiaRequests' => __DIR__ . '/../..' . '/app/Http/Middleware/HandleInertiaRequests.php',
+        'App\\Http\\Middleware\\RestrictDemoAccounts' => __DIR__ . '/../..' . '/app/Http/Middleware/RestrictDemoAccounts.php',
         'App\\Http\\Middleware\\SetCurrentOrganization' => __DIR__ . '/../..' . '/app/Http/Middleware/SetCurrentOrganization.php',
         'App\\Http\\Requests\\Admin\\OrganizationRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/OrganizationRequest.php',
         'App\\Http\\Requests\\Catalog\\ColorRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Catalog/ColorRequest.php',

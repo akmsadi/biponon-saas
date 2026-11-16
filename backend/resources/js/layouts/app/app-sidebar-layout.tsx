@@ -15,7 +15,7 @@ export default function AppSidebarLayout({
             <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
-                <DemoPanel className="mt-auto" />
+                <DemoPanel className="mt-auto" inApp />
             </AppContent>
         </AppShell>
     );

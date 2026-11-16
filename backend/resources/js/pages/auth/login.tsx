@@ -10,14 +10,32 @@ import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import PasskeyVerify from '@/components/passkey-verify';
+import { useState } from 'react';
+
+type DemoAccount = {
+    role: string;
+    label: string;
+    email: string;
+    password: string;
+};
 
 type Props = {
     status?: string;
     canResetPassword: boolean;
+    demoAccounts: DemoAccount[];
 };
 
-export default function Login({ status, canResetPassword }: Props) {
-    const { canRegister } = usePage().props;     
+export default function Login({
+    status,
+    canResetPassword,
+    demoAccounts,
+}: Props) {
+    const { canRegister } = usePage().props;
+    const [demoEmail, setDemoEmail] = useState(demoAccounts[0]?.email);
+    const demoAccount = demoAccounts.find(
+        (account) => account.email === demoEmail,
+    );
+
     return (
         <>
             <Head title="Log in" />
@@ -35,6 +53,9 @@ export default function Login({ status, canResetPassword }: Props) {
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
+                                    // A new demo account remounts the field with its email filled in.
+                                    key={demoAccount?.email}
+                                    defaultValue={demoAccount?.email}
                                     id="email"
                                     type="email"
                                     name="email"
@@ -61,6 +82,8 @@ export default function Login({ status, canResetPassword }: Props) {
                                     )}
                                 </div>
                                 <PasswordInput
+                                    key={demoAccount?.email}
+                                    defaultValue={demoAccount?.password}
                                     id="password"
                                     name="password"
                                     required
@@ -103,6 +126,39 @@ export default function Login({ status, canResetPassword }: Props) {
                     </>
                 )}
             </Form>
+
+            {demoAccounts.length > 0 && (
+                <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-50">
+                    <p className="font-medium">Try it with a demo account</p>
+                    <p className="mt-0.5 text-amber-900/80 dark:text-amber-100/80">
+                        Pick a role and the form above is filled in for you.
+                        Each role sees what it is allowed to do. Demo data is
+                        reset every night.
+                    </p>
+                    <div
+                        role="group"
+                        aria-label="Demo account"
+                        className="mt-3 flex flex-wrap gap-2"
+                    >
+                        {demoAccounts.map((account) => (
+                            <Button
+                                key={account.email}
+                                type="button"
+                                size="sm"
+                                variant={
+                                    account.email === demoEmail
+                                        ? 'default'
+                                        : 'outline'
+                                }
+                                aria-pressed={account.email === demoEmail}
+                                onClick={() => setDemoEmail(account.email)}
+                            >
+                                {account.label}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
