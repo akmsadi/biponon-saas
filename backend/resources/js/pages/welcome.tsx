@@ -10,6 +10,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { DemoPanel } from '@/components/demo-panel';
 import { DashboardPreview } from '@/components/landing/dashboard-preview';
 import { Button } from '@/components/ui/button';
 import type { LandingLanguage } from '@/hooks/use-landing-language';
@@ -260,6 +261,7 @@ export default function Welcome() {
                         </span>
                     </div>
                 </footer>
+                <DemoPanel />
             </div>
         </>
     );

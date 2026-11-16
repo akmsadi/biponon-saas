@@ -1,3 +1,4 @@
+import { DemoPanel } from '@/components/demo-panel';
 import AuthLayoutTemplate from '@/layouts/auth/auth-card-layout';
 
 export default function AuthLayout({
@@ -10,8 +11,11 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <AuthLayoutTemplate title={title} description={description}>
-            {children}
-        </AuthLayoutTemplate>
+        <>
+            <AuthLayoutTemplate title={title} description={description}>
+                {children}
+            </AuthLayoutTemplate>
+            <DemoPanel />
+        </>
     );
 }
