@@ -16,6 +16,12 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                // Bangla glyphs for the landing page; not preloaded, so other pages never download it.
+                bunny('Hind Siliguri', {
+                    weights: [400, 500, 600],
+                    subsets: ['bengali'],
+                    preload: false,
+                }),
             ],
         }),
         inertia(),
