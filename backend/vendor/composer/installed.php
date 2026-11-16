@@ -3,7 +3,7 @@
         'name' => 'laravel/react-starter-kit',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'e85cab56a7794a36079b8a213ba782f39227b537',
+        'reference' => '97ed10199eebca462afcec05288b6cd0ab3088ef',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -433,7 +433,7 @@
         'laravel/react-starter-kit' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'e85cab56a7794a36079b8a213ba782f39227b537',
+            'reference' => '97ed10199eebca462afcec05288b6cd0ab3088ef',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
