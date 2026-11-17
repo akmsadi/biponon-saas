@@ -37,6 +37,8 @@ return [
         'client_secret' => env('DROPBOX_CLIENT_SECRET'),
         'refresh_token' => env('DROPBOX_REFRESH_TOKEN'),
         'backup_folder' => env('DROPBOX_BACKUP_FOLDER', '/saas_database'),
+        // How many backup zips to keep in the folder; older ones are deleted after each upload. 0 keeps all.
+        'keep_backups' => (int) env('DROPBOX_KEEP_BACKUPS', 7),
     ],
 
     'slack' => [
