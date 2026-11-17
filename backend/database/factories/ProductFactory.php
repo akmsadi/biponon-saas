@@ -23,6 +23,7 @@ class ProductFactory extends Factory
             'name' => ucfirst(fake()->words(3, true)),
             'description' => fake()->sentence(),
             'is_active' => true,
+            'show_in_shop' => false,
         ];
     }
 }

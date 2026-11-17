@@ -6,10 +6,12 @@ use App\Concerns\ScopesToOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Catalog\ProductRequest;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,7 +29,7 @@ class ProductController extends Controller
             ->withSum('stockBalances as in_stock_count', 'quantity')
             ->orderByDesc('is_active')
             ->orderBy('name')
-            ->get(['id', 'name', 'description', 'is_active'])
+            ->get(['id', 'name', 'description', 'is_active', 'show_in_shop'])
             ->each(function (Product $product): void {
                 $product->in_stock_count = (int) $product->in_stock_count;
             });
@@ -45,6 +47,7 @@ class ProductController extends Controller
         $product = $this->organization($request)->products()->create([
             ...$request->validated(),
             'is_active' => $request->boolean('is_active'),
+            'show_in_shop' => $request->boolean('show_in_shop'),
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Product created. Now add its variants.')]);
@@ -77,7 +80,10 @@ class ProductController extends Controller
         $organization = $this->organization($request);
 
         return Inertia::render('catalog/products/show', [
-            'product' => $product->only(['id', 'name', 'description', 'is_active']),
+            'product' => $product->only(['id', 'name', 'slug', 'description', 'is_active', 'show_in_shop']),
+            'images' => $product->images->map(fn (ProductImage $image) => ['id' => $image->id, 'url' => $image->url()]),
+            'maxImages' => ProductImage::MAX_PER_PRODUCT,
+            'shopEnabled' => (bool) $this->organization($request)->setting('shop_enabled'),
             'variants' => $variants,
             'sizes' => $organization->sizes()
                 ->where('is_active', true)
@@ -103,6 +109,7 @@ class ProductController extends Controller
         $product->update([
             ...$request->validated(),
             'is_active' => $request->boolean('is_active'),
+            'show_in_shop' => $request->boolean('show_in_shop'),
         ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Product updated.')]);
@@ -111,7 +118,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Delete a product and its variants, unless any variant has ever held stock.
+     * Delete a product with its variants and photos, unless any variant has ever held stock.
      */
     public function destroy(Request $request, Product $product): RedirectResponse
     {
@@ -131,8 +138,11 @@ class ProductController extends Controller
 
         DB::transaction(function () use ($product): void {
             $product->productVariants()->delete();
+            $product->images()->delete();
             $product->delete();
         });
+
+        Storage::disk(ProductImage::DISK)->deleteDirectory(ProductImage::folderFor($product));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Product deleted.')]);
 

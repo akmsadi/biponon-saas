@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Models\Organization;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -28,6 +31,25 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureGates();
+        $this->configureRateLimits();
+    }
+
+    /**
+     * Web shop orders arrive from the Next.js server, so every shopper shares its IP address. Limit instead
+     * per shop (a flood guard) and per shopper phone number (repeat orders).
+     */
+    protected function configureRateLimits(): void
+    {
+        RateLimiter::for('shop-orders', function (Request $request): array {
+            $shop = $request->route('shop');
+            $shopKey = 'shop-orders:'.($shop instanceof Organization ? $shop->slug : (string) $shop);
+            $phoneDigits = preg_replace('/\D+/', '', (string) $request->input('phone'));
+
+            return [
+                Limit::perMinute(30)->by($shopKey),
+                Limit::perHour(5)->by($shopKey.':'.$phoneDigits),
+            ];
+        });
     }
 
     /**

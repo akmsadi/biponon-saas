@@ -6,6 +6,7 @@ use App\Concerns\ScopesToOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\GeneralSettingsRequest;
 use App\Http\Requests\Organization\InventorySettingsRequest;
+use App\Http\Requests\Organization\ShopSettingsRequest;
 use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,6 +77,33 @@ class SettingsController extends Controller
             'default_warehouse_id' => $request->validated('default_warehouse_id') === null ? null : (int) $request->validated('default_warehouse_id'),
             'default_reorder_level' => $request->validated('default_reorder_level') === null ? null : (int) $request->validated('default_reorder_level'),
         ]);
+        $organization->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Settings saved.')]);
+
+        return back();
+    }
+
+    public function editShop(Request $request): Response
+    {
+        $organization = $this->organization($request);
+        $shopUrl = config('app.shop_url');
+
+        return Inertia::render('organization/settings/shop', [
+            'settings' => [
+                'shop_enabled' => (bool) $organization->setting('shop_enabled'),
+            ],
+            'shopLink' => $shopUrl ? rtrim($shopUrl, '/').'/'.$organization->slug : null,
+            'hasDefaultWarehouse' => $organization->defaultWarehouseId() !== null,
+            'productsInShop' => $organization->products()->where('show_in_shop', true)->where('is_active', true)->count(),
+        ]);
+    }
+
+    public function updateShop(ShopSettingsRequest $request): RedirectResponse
+    {
+        $organization = $this->organization($request);
+
+        $organization->putSettings(['shop_enabled' => $request->boolean('shop_enabled')]);
         $organization->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Settings saved.')]);

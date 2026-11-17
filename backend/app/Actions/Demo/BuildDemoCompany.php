@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Organization;
 use App\Models\OrganizationInvitation;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
@@ -24,6 +25,7 @@ use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -243,6 +245,9 @@ class BuildDemoCompany
             $organization->invitations()->delete();
             $organization->delete();
         });
+
+        // Product photo rows go with their products; their files live in one folder per organization.
+        Storage::disk(ProductImage::DISK)->deleteDirectory("products/{$organization->id}");
     }
 
     /**

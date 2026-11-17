@@ -141,4 +141,17 @@ return [
         'password' => env('SEED_ADMIN_PASSWORD'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Online Shop URL
+    |--------------------------------------------------------------------------
+    |
+    | Where the Next.js shop (frontend/) is published, e.g.
+    | https://shop.example.com. Each organization's shop lives at this URL
+    | plus its slug. Empty until the shop site is live.
+    |
+    */
+
+    'shop_url' => env('SHOP_URL'),
+
 ];

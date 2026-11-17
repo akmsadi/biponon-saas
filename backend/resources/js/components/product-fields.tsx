@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 /**
- * Name, description and active fields, shared by the "Add product" dialog and the product page's details form.
+ * Name, description, active and online shop fields, shared by the "Add product" dialog and the product page's details form.
  */
 export default function ProductFields({
     product,
@@ -14,6 +14,7 @@ export default function ProductFields({
         name: string;
         description: string | null;
         is_active: boolean;
+        show_in_shop: boolean;
     };
     errors: Partial<Record<string, string>>;
 }) {
@@ -56,6 +57,23 @@ export default function ProductFields({
                 <Label htmlFor="is_active">Active</Label>
             </div>
             <InputError message={errors.is_active} />
+
+            <div className="grid gap-1">
+                <div className="flex items-center space-x-3">
+                    <Checkbox
+                        id="show_in_shop"
+                        name="show_in_shop"
+                        value="1"
+                        defaultChecked={product?.show_in_shop ?? false}
+                    />
+                    <Label htmlFor="show_in_shop">Show in online shop</Label>
+                </div>
+                <p className="pl-7 text-xs text-muted-foreground">
+                    Listed in your shop while the product is active. Only active
+                    variants with a price can be ordered.
+                </p>
+            </div>
+            <InputError message={errors.show_in_shop} />
         </>
     );
 }

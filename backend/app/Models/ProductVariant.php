@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\ProductVariantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +29,26 @@ class ProductVariant extends Model
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Variants a shopper can order: active and priced.
+     */
+    #[Scope]
+    protected function orderableInShop(Builder $query): void
+    {
+        $query->where('is_active', true)->whereNotNull('price');
+    }
+
+    /**
+     * Adds `shop_stock`: units on hand in active warehouses, the only stock web orders can ship.
+     */
+    #[Scope]
+    protected function withShopStock(Builder $query): void
+    {
+        $query->withSum(['stockBalances as shop_stock' => fn (Builder $balances) => $balances
+            ->whereHas('warehouse', fn (Builder $warehouses) => $warehouses->where('is_active', true)),
+        ], 'quantity');
     }
 
     public function product(): BelongsTo

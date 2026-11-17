@@ -101,10 +101,7 @@ class SalesOrderController extends Controller
         $organization = $this->organization($request);
 
         $order = DB::transaction(function () use ($organization, $request): SalesOrder {
-            // Lock the organization so two drafts created at once cannot take the same number.
-            Organization::whereKey($organization->id)->lockForUpdate()->first();
-
-            $sequence = ($organization->salesOrders()->max('sequence') ?? 0) + 1;
+            $sequence = $organization->nextSalesOrderSequence();
 
             $order = $organization->salesOrders()->create([
                 'sequence' => $sequence,

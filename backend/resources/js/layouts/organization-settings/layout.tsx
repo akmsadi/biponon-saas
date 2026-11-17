@@ -8,11 +8,13 @@ import { cn, toUrl } from '@/lib/utils';
 import { edit as editGeneral } from '@/routes/organization/settings/general';
 import { edit as editInventory } from '@/routes/organization/settings/inventory';
 import { edit as editMembership } from '@/routes/organization/settings/membership';
+import { edit as editShop } from '@/routes/organization/settings/shop';
 import type { NavItem } from '@/types';
 
 const navItems: NavItem[] = [
     { title: 'General', href: editGeneral(), icon: null },
     { title: 'Inventory defaults', href: editInventory(), icon: null },
+    { title: 'Online shop', href: editShop(), icon: null },
     { title: 'Leave organization', href: editMembership(), icon: null },
 ];
 
