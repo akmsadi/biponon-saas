@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -32,6 +33,20 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureGates();
         $this->configureRateLimits();
+        $this->configureRouteBindings();
+    }
+
+    /**
+     * Route parameters resolved by something other than the id. Defined here, not in a routes file,
+     * because cached routes skip the routes files.
+     */
+    protected function configureRouteBindings(): void
+    {
+        // The online shop API's {shop}: an active organization, found by its slug.
+        Route::bind('shop', fn (string $slug): Organization => Organization::query()
+            ->where('slug', $slug)
+            ->where('status', 'active')
+            ->firstOrFail());
     }
 
     /**
