@@ -55,6 +55,42 @@ class ProductTest extends TestCase
                 ->where('products.0.in_stock_count', 8));
     }
 
+    public function test_products_get_a_unique_slug_that_survives_a_rename(): void
+    {
+        $first = Product::factory()->for($this->organization)->create(['name' => 'Classic Tee']);
+        $second = Product::factory()->for($this->organization)->create(['name' => 'Classic  TEE!']);
+        $otherOrganizations = Product::factory()->create(['name' => 'Classic Tee']);
+        $unsluggable = Product::factory()->for($this->organization)->create(['name' => 'পাঞ্জাবি']);
+
+        $this->assertSame('classic-tee', $first->slug);
+        $this->assertSame('classic-tee-2', $second->slug);
+        $this->assertSame('classic-tee', $otherOrganizations->slug);
+        $this->assertNotSame('', $unsluggable->slug);
+
+        $this->actingAs($this->user)
+            ->put(route('catalog.products.update', $first), ['name' => 'Premium Tee', 'is_active' => '1'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('classic-tee', $first->fresh()->slug);
+    }
+
+    public function test_managers_choose_whether_a_product_shows_in_the_shop(): void
+    {
+        $product = Product::factory()->for($this->organization)->create();
+        $this->assertFalse($product->show_in_shop);
+
+        $this->actingAs($this->user)
+            ->put(route('catalog.products.update', $product), ['name' => $product->name, 'is_active' => '1', 'show_in_shop' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($product->fresh()->show_in_shop);
+
+        // An unticked checkbox sends nothing, which hides the product again.
+        $this->actingAs($this->user)
+            ->put(route('catalog.products.update', $product), ['name' => $product->name, 'is_active' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($product->fresh()->show_in_shop);
+    }
+
     public function test_creating_a_product_redirects_to_its_page(): void
     {
         $response = $this->actingAs($this->user)

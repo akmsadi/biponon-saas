@@ -29,6 +29,7 @@ class Organization extends Model
         'currency' => 'BDT',
         'default_warehouse_id' => null,
         'default_reorder_level' => null,
+        'shop_enabled' => false,
     ];
 
     protected function casts(): array

@@ -21,6 +21,7 @@ type Product = {
     name: string;
     description: string | null;
     is_active: boolean;
+    show_in_shop: boolean;
     product_variants_count: number;
     in_stock_count: number;
 };
@@ -110,6 +111,14 @@ export default function Products({ products }: { products: Product[] }) {
                                                 ? 'Active'
                                                 : 'Inactive'}
                                         </Badge>
+                                        {product.show_in_shop && (
+                                            <Badge
+                                                variant="outline"
+                                                className="ml-2"
+                                            >
+                                                In shop
+                                            </Badge>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

@@ -144,8 +144,55 @@ class SettingsTest extends TestCase
             ->put(route('organization.settings.inventory.update'), ['default_reorder_level' => 5])
             ->assertForbidden();
 
+        $this->actingAs($user)
+            ->put(route('organization.settings.shop.update'), ['shop_enabled' => true])
+            ->assertForbidden();
+
         $this->assertSame('Acme', $this->organization->fresh()->name);
         $this->assertNull($this->organization->fresh()->setting('default_reorder_level'));
+        $this->assertFalse($this->organization->fresh()->setting('shop_enabled'));
+    }
+
+    public function test_the_shop_opens_only_with_an_active_default_warehouse(): void
+    {
+        $this->actingAs($this->admin)
+            ->put(route('organization.settings.shop.update'), ['shop_enabled' => '1'])
+            ->assertSessionHasErrors('shop_enabled');
+        $this->assertFalse($this->organization->fresh()->setting('shop_enabled'));
+
+        $warehouse = Warehouse::factory()->for($this->organization)->create();
+        $this->organization->putSettings(['default_warehouse_id' => $warehouse->id]);
+        $this->organization->save();
+
+        // A fresh user, so the organization is loaded again with its new settings.
+        $this->actingAs($this->admin->fresh())
+            ->put(route('organization.settings.shop.update'), ['shop_enabled' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($this->organization->fresh()->setting('shop_enabled'));
+
+        // Closing never needs a warehouse.
+        $this->actingAs($this->admin->fresh())
+            ->put(route('organization.settings.shop.update'), [])
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($this->organization->fresh()->setting('shop_enabled'));
+    }
+
+    public function test_the_shop_page_shows_its_address_and_how_many_products_are_listed(): void
+    {
+        config(['app.shop_url' => 'https://shop.example.test/']);
+        Product::factory()->for($this->organization)->count(2)->create(['show_in_shop' => true]);
+        Product::factory()->for($this->organization)->create(['show_in_shop' => true, 'is_active' => false]);
+        Product::factory()->for($this->organization)->create();
+        Product::factory()->create(['show_in_shop' => true]);
+
+        $this->actingAs($this->admin)
+            ->get(route('organization.settings.shop.edit'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('organization/settings/shop')
+                ->where('settings.shop_enabled', false)
+                ->where('shopLink', 'https://shop.example.test/acme')
+                ->where('hasDefaultWarehouse', false)
+                ->where('productsInShop', 2));
     }
 
     public function test_the_default_warehouse_must_be_an_active_warehouse_of_this_organization(): void

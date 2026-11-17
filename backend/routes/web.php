@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AccessRequestController as AdminAccessRequestCont
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Catalog\ColorController;
 use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductImageController;
 use App\Http\Controllers\Catalog\ProductVariantController;
 use App\Http\Controllers\Catalog\SizeController;
 use App\Http\Controllers\CurrentOrganizationController;
@@ -74,6 +75,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->middlewareFor(['store', 'update', 'destroy'], 'role:manager');
             Route::resource('products.variants', ProductVariantController::class)->only(['store', 'update', 'destroy'])->shallow()
                 ->middleware('role:manager');
+            Route::middleware('role:manager')->group(function () {
+                Route::post('products/{product}/images', [ProductImageController::class, 'store'])->name('products.images.store');
+                Route::post('images/{productImage}/main', [ProductImageController::class, 'makeMain'])->name('images.main');
+                Route::delete('images/{productImage}', [ProductImageController::class, 'destroy'])->name('images.destroy');
+            });
         });
 
         Route::resource('warehouses', WarehouseController::class)->only(['index', 'store', 'update', 'destroy'])
@@ -123,6 +129,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('general', [SettingsController::class, 'updateGeneral'])->middleware('role:admin')->name('general.update');
             Route::get('inventory', [SettingsController::class, 'editInventory'])->name('inventory.edit');
             Route::put('inventory', [SettingsController::class, 'updateInventory'])->middleware('role:admin')->name('inventory.update');
+            Route::get('shop', [SettingsController::class, 'editShop'])->name('shop.edit');
+            Route::put('shop', [SettingsController::class, 'updateShop'])->middleware('role:admin')->name('shop.update');
             Route::get('membership', [SettingsController::class, 'editMembership'])->name('membership.edit');
             Route::delete('membership', [SettingsController::class, 'leave'])->name('membership.destroy');
         });

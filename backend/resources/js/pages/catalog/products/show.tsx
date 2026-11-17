@@ -7,6 +7,8 @@ import ColorSwatch from '@/components/color-swatch';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import ProductFields from '@/components/product-fields';
+import ProductPhotos from '@/components/product-photos';
+import type { ProductPhoto } from '@/components/product-photos';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,8 +35,10 @@ import { index as movementsIndex } from '@/routes/inventory/movements';
 type Product = {
     id: number;
     name: string;
+    slug: string;
     description: string | null;
     is_active: boolean;
+    show_in_shop: boolean;
 };
 
 type Size = { id: number; name: string; code: string | null };
@@ -66,6 +70,9 @@ type Props = {
     sizes: Size[];
     colors: Color[];
     defaultReorderLevel: number | null;
+    images: ProductPhoto[];
+    maxImages: number;
+    shopEnabled: boolean;
 };
 
 const PRICE_PATTERN = '\\d+(\\.\\d{1,2})?';
@@ -98,6 +105,9 @@ export default function ShowProduct({
     sizes,
     colors,
     defaultReorderLevel,
+    images,
+    maxImages,
+    shopEnabled,
 }: Props) {
     const [addingVariants, setAddingVariants] = useState(false);
     // undefined = closed, Variant = editing
@@ -129,6 +139,19 @@ export default function ShowProduct({
                         {!product.is_active && (
                             <Badge variant="outline" className="mt-1">
                                 Inactive
+                            </Badge>
+                        )}
+                        {product.show_in_shop && (
+                            <Badge
+                                variant="outline"
+                                className="mt-1"
+                                title={
+                                    shopEnabled
+                                        ? undefined
+                                        : 'Your online shop is switched off in Organization settings → Online shop'
+                                }
+                            >
+                                {shopEnabled ? 'In shop' : 'In shop (shop off)'}
                             </Badge>
                         )}
                     </div>
@@ -185,6 +208,13 @@ export default function ShowProduct({
                         </CardContent>
                     </Card>
                 )}
+
+                <ProductPhotos
+                    product={product}
+                    images={images}
+                    maxImages={maxImages}
+                    canManage={canManage}
+                />
 
                 <div className="flex items-end justify-between gap-4">
                     <Heading
