@@ -71,6 +71,28 @@ class Organization extends Model
         return $this->warehouses()->whereKey($warehouseId)->where('is_active', true)->exists() ? (int) $warehouseId : null;
     }
 
+    /**
+     * Whether the online shop lists products and takes orders: the organization is active, its admin opened
+     * the shop, and the default warehouse that web orders ship from is still active.
+     */
+    public function shopIsOpen(): bool
+    {
+        return $this->status === 'active'
+            && (bool) $this->setting('shop_enabled')
+            && $this->defaultWarehouseId() !== null;
+    }
+
+    /**
+     * The next sales order sequence number. Call inside a transaction: it locks the organization row so two
+     * orders created at once cannot take the same number.
+     */
+    public function nextSalesOrderSequence(): int
+    {
+        self::whereKey($this->id)->lockForUpdate()->first();
+
+        return ($this->salesOrders()->max('sequence') ?? 0) + 1;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -52,6 +54,17 @@ class Product extends Model
         }
 
         return $slug;
+    }
+
+    /**
+     * Products the online shop lists: active, chosen for the shop, with at least one orderable variant.
+     */
+    #[Scope]
+    protected function listedInShop(Builder $query): void
+    {
+        $query->where('is_active', true)
+            ->where('show_in_shop', true)
+            ->whereHas('productVariants', fn (Builder $variants) => $variants->orderableInShop());
     }
 
     /**
