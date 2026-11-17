@@ -154,7 +154,7 @@ The app lives outside the web root. The subdomain's document root (`~/public_htm
 | 03:00, only in demo mode | `biponon:demo --fresh` | Rebuilds the demo organization |
 | 08:00 | `backup:monitor` | Emails `BACKUP_NOTIFICATION_EMAIL` if the backup is missing or unhealthy |
 
-After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupToDropbox`. That job trades the refresh token for an access token and uploads the zip, retrying after 1 and 5 minutes. Copies in Dropbox are never pruned.
+After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupToDropbox`. That job trades the refresh token for an access token and uploads the zip, retrying after 1 and 5 minutes. After uploading it keeps only the newest `DROPBOX_KEEP_BACKUPS` zips in the folder (by Dropbox upload time) and deletes the rest; other files there are left alone. A failed clean-up is logged but does not fail the job, so the zip is never uploaded twice.
 
 **Production `.env` keys** beyond Laravel's usual ones (template: `backend/.env.production.example`):
 
@@ -167,6 +167,7 @@ After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupT
 | `BACKUP_NAME`, `BACKUP_NOTIFICATION_EMAIL`, `BACKUP_ARCHIVE_PASSWORD` | Backup folder, failure alerts, zip password |
 | `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET`, `DROPBOX_REFRESH_TOKEN` | Dropbox app; empty = uploads skipped |
 | `DROPBOX_BACKUP_FOLDER` | Dropbox folder, default `/saas_database` |
+| `DROPBOX_KEEP_BACKUPS` | Zips kept in that folder, default 7; `0` keeps all |
 | `MAIL_*` | SMTP for invitations; not configured yet, so admins copy the invitation link from the dialog |
 
 ## Demo mode, landing page and access requests
