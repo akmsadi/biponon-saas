@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Symfony\Component\HttpFoundation\Response;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,7 +52,8 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Web shop orders arrive from the Next.js server, so every shopper shares its IP address. Limit instead
-     * per shop (a flood guard) and per shopper phone number (repeat orders).
+     * per shop (a flood guard, counting every attempt) and per shopper phone number (counting only orders
+     * actually placed, so a shopper fixing typos in the form is not locked out).
      */
     protected function configureRateLimits(): void
     {
@@ -62,7 +64,8 @@ class AppServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(30)->by($shopKey),
-                Limit::perHour(5)->by($shopKey.':'.$phoneDigits),
+                Limit::perHour(5)->by($shopKey.':'.$phoneDigits)
+                    ->after(fn (Response $response): bool => $response->getStatusCode() === Response::HTTP_CREATED),
             ];
         });
     }
