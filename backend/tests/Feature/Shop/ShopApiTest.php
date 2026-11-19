@@ -308,4 +308,16 @@ class ShopApiTest extends TestCase
         $this->placeOrder(['lines' => $lines])->assertTooManyRequests();
         $this->placeOrder(['lines' => $lines, 'phone' => '01812 000000'])->assertCreated();
     }
+
+    public function test_refused_orders_do_not_count_toward_the_phone_limit(): void
+    {
+        $variant = $this->listedProduct('Classic Tee', stock: 50)->productVariants->first();
+        $lines = [['variant_id' => $variant->id, 'quantity' => 1]];
+
+        for ($attempt = 1; $attempt <= 6; $attempt++) {
+            $this->placeOrder(['lines' => $lines, 'address' => ''])->assertUnprocessable();
+        }
+
+        $this->placeOrder(['lines' => $lines])->assertCreated();
+    }
 }
