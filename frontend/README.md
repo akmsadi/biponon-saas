@@ -22,9 +22,15 @@ Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, shadcn/ui.
 | --- | --- |
 | `lib/api.ts` | The only code that calls the Laravel API (typed, cached about 1 minute) |
 | `lib/money.ts` | Price formatting |
-| `app/[shop]/layout.tsx` | Shop header and footer |
+| `lib/cart.ts` | Cart rules (add, quantities, totals), no React |
+| `lib/use-cart.ts` | `useCart()`: the cart in the browser's localStorage, for Client Components |
+| `app/[shop]/layout.tsx` | Shop header (with cart icon) and footer |
 | `app/[shop]/page.tsx` | Product grid with search and pages |
+| `app/[shop]/products/[product]/page.tsx` | Product page: photos, size and color, add to cart |
+| `app/[shop]/cart/page.tsx` | Cart: quantities, remove, subtotal |
 | `app/[shop]/not-found.tsx` | Unknown shop |
-| `components/` | Product card, search box, pagination; `components/ui/` = shadcn |
+| `components/` | Product card, search, pagination, gallery, variant picker, cart icon and cart view; `components/ui/` = shadcn |
+
+The cart is kept in the shopper's browser (`localStorage`, one per shop) until checkout.
 
 Learning notes for each step: [LEARNING.md](LEARNING.md). UI credits: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -63,6 +63,7 @@ async function ProductDetails({ params }: PageProps<"/[shop]/products/[product]"
           {/* Key: start the picker fresh when moving to another product. */}
           <VariantPicker
             key={product.slug}
+            product={{ slug: product.slug, name: product.name, image: product.image }}
             sizes={product.sizes}
             colors={product.colors}
             variants={product.variants}

@@ -1,16 +1,20 @@
 "use client";
 
+import Link from "next/link";
+import { CheckIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 // Types only: a normal import of lib/api.ts would fail the build ("server-only").
 import type { ProductColor, ProductSize, ProductVariant } from "@/lib/api";
+import { type AddResult, MAX_LINES, MAX_QUANTITY } from "@/lib/cart";
 import { formatMoney, formatPriceRange } from "@/lib/money";
+import { useCart } from "@/lib/use-cart";
 import { cn } from "cn";
 
 /**
  * Size and color buttons, the price and stock of the chosen variant, and the
- * "Add to cart" button (switched on in Step 3c).
+ * "Add to cart" button, which puts one of the chosen variant in the cart.
  *
  * A Client Component: it remembers the shopper's choice (useState) and reacts to clicks.
  * The page (a Server Component) passes in plain data only.
@@ -22,12 +26,15 @@ import { cn } from "cn";
  * - With only one size (or color), it starts chosen.
  */
 export function VariantPicker({
+  product,
   sizes,
   colors,
   variants,
   price,
   currency,
 }: {
+  /** What the cart line copies: the product's slug (for a link back), name and main photo. */
+  product: { slug: string; name: string; image: string | null };
   sizes: ProductSize[];
   colors: ProductColor[];
   variants: ProductVariant[];
@@ -36,6 +43,9 @@ export function VariantPicker({
 }) {
   const [sizeId, setSizeId] = useState<number | null>(sizes.length === 1 ? sizes[0].id : null);
   const [colorId, setColorId] = useState<number | null>(colors.length === 1 ? colors[0].id : null);
+  /** What happened on the last "Add to cart" click; cleared when the choice changes. */
+  const [added, setAdded] = useState<AddResult | null>(null);
+  const cart = useCart();
 
   /** Is any variant in stock with this size and color? null means "any". */
   const inStock = (size: number | null, color: number | null) =>
@@ -48,16 +58,36 @@ export function VariantPicker({
 
   function chooseSize(id: number) {
     setSizeId(id);
+    setAdded(null);
     if (colorId !== null && !inStock(id, colorId)) setColorId(null);
   }
 
   function chooseColor(id: number) {
     setColorId(id);
+    setAdded(null);
     if (sizeId !== null && !inStock(sizeId, id)) setSizeId(null);
   }
 
   const chosenSize = sizes.find((size) => size.id === sizeId);
   const chosenColor = colors.find((color) => color.id === colorId);
+
+  function addToCart() {
+    if (!chosen || !chosen.in_stock || !chosenSize || !chosenColor) return;
+
+    setAdded(
+      cart.add({
+        variantId: chosen.id,
+        productSlug: product.slug,
+        name: product.name,
+        size: chosenSize.name,
+        color: chosenColor.name,
+        price: chosen.price,
+        image: product.image,
+      }),
+    );
+  }
+
+  const inCart = chosen ? cart.lines.find((line) => line.variantId === chosen.id)?.quantity : undefined;
 
   if (variants.length === 0) {
     return <p className="mt-6 text-muted-foreground">Not available to order right now.</p>;
@@ -126,10 +156,28 @@ export function VariantPicker({
         )}
       </p>
 
-      {/* Step 3c puts the chosen variant in the cart. */}
-      <Button size="lg" className="mt-4 w-full" disabled title="Coming soon">
-        Add to cart
+      <Button size="lg" className="mt-4 w-full" disabled={!chosen?.in_stock} onClick={addToCart}>
+        {added === "added" ? (
+          <>
+            <CheckIcon aria-hidden /> Added to cart
+          </>
+        ) : (
+          "Add to cart"
+        )}
       </Button>
+
+      <p className="mt-3 min-h-5 text-sm text-muted-foreground" aria-live="polite">
+        {added === "max-quantity" && `You can order at most ${MAX_QUANTITY} of one size and color. `}
+        {added === "cart-full" && `Your cart is full (${MAX_LINES} different items). `}
+        {inCart !== undefined && (
+          <>
+            {inCart} in your cart ·{" "}
+            <Link href={`/${cart.shop}/cart`} className="font-medium text-foreground underline-offset-4 hover:underline">
+              View cart
+            </Link>
+          </>
+        )}
+      </p>
     </div>
   );
 }

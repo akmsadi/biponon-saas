@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { CartLink, CartLinkPlaceholder } from "@/components/cart-link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getShop } from "@/lib/api";
 
 /**
- * The frame around every page of one shop: /{shop}, later /{shop}/products/{product}, /{shop}/cart...
+ * The frame around every page of one shop: /{shop}, /{shop}/products/{product}, /{shop}/cart...
  * The [shop] folder name makes "shop" a URL parameter, e.g. "demo-fashion".
  */
 
@@ -23,9 +24,13 @@ export default function ShopLayout({ children, params }: LayoutProps<"/[shop]">)
   return (
     <>
       <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Suspense fallback={<Skeleton className="h-6 w-40" />}>
             <ShopName params={params} />
+          </Suspense>
+          {/* The cart icon needs the shop slug from the URL, which is only known per request. */}
+          <Suspense fallback={<CartLinkPlaceholder />}>
+            <CartLink />
           </Suspense>
         </div>
       </header>

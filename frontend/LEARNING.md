@@ -232,6 +232,94 @@ Anything with `useState` or `onClick` needs `"use client"` as the file's first l
 5. In `variant-picker.tsx`, choose a size, then a colour that is crossed out. What happens to
    the size, and which function does that?
 
-## Step 3c: cart · Step 3d: checkout (cash on delivery) · Step 4: deploy to Vercel
+---
+
+## Step 3c: the cart ✅
+
+"Add to cart" on a product page, a cart icon with a count in the header, and the cart page
+`/demo-fashion/cart` (change quantities, remove, subtotal). Checkout comes in Step 3d.
+
+Read in this order: `lib/cart.ts` → `lib/use-cart.ts` → `components/cart-link.tsx` and
+`app/[shop]/layout.tsx` → `components/variant-picker.tsx` (`addToCart`) →
+`app/[shop]/cart/page.tsx` → `components/cart-view.tsx`.
+
+Docs: `01-app/01-getting-started/05-server-and-client-components.md`. React docs:
+https://react.dev/reference/react/useSyncExternalStore.
+
+### 1. Where the cart lives: the browser
+
+The cart is saved in `localStorage`, one cart per shop (key `biponon-cart:demo-fashion`).
+No login, nothing in Laravel until the order is placed, and every shop page stays cached.
+The other common choice, a cart ID in a cookie with the cart on the server, makes every
+page that shows the cart icon read the cookie, so those pages can't be cached.
+
+`localStorage` belongs to the visitor, so `parseLines()` treats it like user input: anything
+broken or edited by hand is dropped instead of crashing the page.
+
+### 2. Plain logic in plain files
+
+`lib/cart.ts` has no React and no `"server-only"`: just data in, data out (`addToLines`,
+`setLineQuantity`, `subtotal`...). Easy to read, easy to test, and the checkout will reuse it.
+
+Money is added in whole poisha (`toCents`), because `0.1 + 0.2` is `0.30000000000000004`
+in JavaScript.
+
+### 3. Sharing state: one store, many components
+
+Every Client Component that calls `useCart()` (`lib/use-cart.ts`) reads the same store, so
+the header icon, the picker and the cart page update together. When the cart changes,
+`writeLines()` saves it and tells every subscribed component to re-render.
+
+**What went wrong first (worth remembering):** the first version used a React Context
+provider wrapped around the whole shop layout. It called `useParams()` for the shop slug,
+and the build stopped with `blocking-prerender-client-hook`. Next.js prerenders the static
+frame of `/[shop]` *before* any shop slug is known, so anything that reads the URL (`params`,
+`useParams()`, `searchParams`) must sit inside `<Suspense>`. A provider around everything
+can't. So the hook reads the slug itself, and only components already inside `<Suspense>`
+use it. The header's cart icon got its own `<Suspense fallback={<CartLinkPlaceholder />}>`.
+
+Context is still the right tool for state that doesn't depend on the URL (a theme, a
+signed-in user). For a store outside React like `localStorage`, `useSyncExternalStore` alone
+is enough.
+
+### 4. Reading browser storage without a hydration error
+
+The server has no `localStorage`, so its HTML always shows an empty cart. If the browser's
+first render showed 3 items, React would see different HTML and report a **hydration
+mismatch**.
+
+`useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)` solves it: React uses the
+server snapshot (empty cart, `ready: false`) while hydrating, then switches to the real one.
+That is why the cart page shows a skeleton until `ready`, not a wrong "Your cart is empty".
+
+`getSnapshot` must return the **same array** while nothing changed, or React re-renders
+forever. `readLines()` remembers the parsed cart by its JSON text for that reason.
+
+The `"storage"` event fires when **another tab** changes `localStorage`, so two open tabs
+stay in step.
+
+### 5. A page that is mostly client-side
+
+`app/[shop]/cart/page.tsx` is still a Server Component: it fetches the shop (currency, open
+or closed). The list itself is `<CartView>`, a Client Component. Use server for data you can
+fetch, client for what lives in the browser or reacts to clicks.
+
+`export const metadata = { title: "Your cart" }` is the static form of `generateMetadata`.
+
+### Exercises
+
+1. Add something to the cart, open DevTools → Application → Local Storage and find the
+   cart. Change a quantity to `99` by hand and reload. What does the page show, and which
+   function decided that?
+2. Open the shop in two tabs. Add to the cart in one: does the other tab's icon change?
+   Which line of `lib/use-cart.ts` makes that happen?
+3. In `cart-view.tsx`, remove `if (!ready) return <CartSkeleton />;` and reload a cart with
+   items. What flashes first, and why?
+4. Change `MAX_QUANTITY` to 3. Which buttons and messages change, without any other edit?
+5. Explain out loud: why is the cart not stored in Laravel until checkout?
+
+---
+
+## Step 3d: checkout (cash on delivery) · Step 4: deploy to Vercel
 
 Notes are added here as we build each one.
