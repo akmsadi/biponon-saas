@@ -39,6 +39,29 @@ export type ProductCard = {
   in_stock: boolean;
 };
 
+/** One orderable size × color. Stock is only yes/no. */
+export type ProductVariant = {
+  id: number;
+  sku: string;
+  size_id: number;
+  color_id: number;
+  price: string;
+  in_stock: boolean;
+};
+
+export type ProductSize = { id: number; name: string };
+
+export type ProductColor = { id: number; name: string; hex: string | null };
+
+/** A product page: everything on the card plus description, all photos (main first), sizes, colors and variants. */
+export type ProductDetail = ProductCard & {
+  description: string | null;
+  images: string[];
+  sizes: ProductSize[];
+  colors: ProductColor[];
+  variants: ProductVariant[];
+};
+
 /** Laravel's paginated resource collection. */
 export type Paginated<T> = {
   data: T[];
@@ -93,4 +116,16 @@ export async function getProducts(
   const queryString = query.size > 0 ? `?${query}` : "";
 
   return getJson<Paginated<ProductCard>>(`/shops/${encodeURIComponent(slug)}/products${queryString}`);
+}
+
+/** One product page: photos, sizes, colors and orderable variants. Null when the product or shop is not found. */
+export async function getProduct(shopSlug: string, productSlug: string): Promise<ProductDetail | null> {
+  "use cache";
+  cacheLife("minutes");
+
+  const body = await getJson<{ data: ProductDetail }>(
+    `/shops/${encodeURIComponent(shopSlug)}/products/${encodeURIComponent(productSlug)}`,
+  );
+
+  return body?.data ?? null;
 }

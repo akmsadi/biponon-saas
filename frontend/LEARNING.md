@@ -111,12 +111,126 @@ Docs: `01-app/03-api-reference/02-components/image.md`.
 
 ---
 
-## Step 3b: product page (you write it, I review)
+## Step 3b: product page ✅
 
-`app/[shop]/products/[product]/page.tsx`, using `getProduct()` which we add to
-`lib/api.ts` together. You'll practise nested dynamic segments, `generateMetadata`, and
-a first **Client Component** (`"use client"`) for picking size and colour.
-Course chapters to do first: 12 (mutating data, Server Actions), 13 (error handling).
+Goal: `/demo-fashion/products/classic-cotton-t-shirt` shows the photos, name, description
+and price, and lets the shopper pick a size and colour. The product cards already link
+here. The "Add to cart" button stays disabled until Step 3c.
+
+**Built and ready to read.** The tasks below explain the code in the order it was written:
+`lib/api.ts` (`getProduct`), `app/[shop]/products/[product]/page.tsx` and `not-found.tsx`,
+`components/product-gallery.tsx` and `components/variant-picker.tsx`. Read each task, then
+the matching file, then do the exercises.
+
+Mistakes worth remembering from the first try:
+- `import notFound from "./not-found"` imports the not-found *component*, and calling it just
+  draws it inside the page. The real one is `import { notFound } from "next/navigation"`:
+  it stops the page, shows the nearest `not-found.tsx` and adds `noindex`.
+- Import `Metadata` from `"next"`, never from `next/dist/...` (internal paths change).
+- `next/image` needs `fill` (inside a `relative` box) or `width` + `height`, and `sizes`
+  should describe *this* layout (the product photo is half the screen, not a third).
+
+Course chapters first: 13 (error handling, `notFound()`). Docs to read:
+`01-app/01-getting-started/05-server-and-client-components.md` (the most important one
+for this step) and `01-app/03-api-reference/04-functions/generate-metadata.md`.
+
+### What the API gives you
+
+`GET {BIPONON_API_URL}/shops/demo-fashion/products/classic-cotton-t-shirt` answers
+`{ "data": { ... } }` (open it in the browser to see real data). `data` has
+everything a card has, plus:
+
+```jsonc
+{
+  "slug": "classic-cotton-t-shirt", "name": "...", "image": "...", "price": { "min": "450.00", "max": "450.00" }, "in_stock": true,
+  "description": "100% combed cotton crew neck tee.",   // can be null
+  "images": ["http://.../storage/products/4/23/a.png"], // main photo first, can be []
+  "sizes":  [{ "id": 1, "name": "S" }],
+  "colors": [{ "id": 3, "name": "Navy", "hex": "#1F2A44" }], // hex can be null
+  "variants": [{ "id": 101, "sku": "TSH-S-NVY", "size_id": 1, "color_id": 3, "price": "450.00", "in_stock": true }]
+}
+```
+
+Every variant has a size and a colour. Not every size × colour exists, and some exist but
+are out of stock. A closed shop or a hidden product answers 404.
+
+### Your tasks
+
+**1. `getProduct()` in `lib/api.ts`.**
+Add a `ProductVariant` type and a `ProductDetail` type (hint: `ProductCard & { ... }`),
+then `getProduct(shopSlug, productSlug)`. Copy the shape of `getShop()`: `"use cache"`,
+`cacheLife("minutes")`, `getJson`, return `body?.data ?? null`. Remember
+`encodeURIComponent` on both slugs.
+
+**2. The page: `app/[shop]/products/[product]/page.tsx`.**
+- The folder path *is* the URL. Its props type is `PageProps<"/[shop]/products/[product]">`
+  and `params` holds both `shop` and `product`.
+- Same pattern as `app/[shop]/page.tsx`: the default export renders a frame with
+  `<Suspense fallback={...}>`, and an inner `async` component awaits `params`, calls
+  `getShop()` (for the currency) and `getProduct()`.
+- `getProduct()` returned null → call `notFound()` (from `next/navigation`).
+- Layout idea: two columns on large screens (`grid lg:grid-cols-2 gap-10`): photos on the
+  left; name, price, description and the picker on the right.
+- Photos: the first one big (`aspect-square`, `next/image` with `fill`, `sizes`,
+  `preload`), the others as small thumbnails below. No photos → the same `ImageIcon`
+  placeholder as `components/product-card.tsx`.
+- Description: `whitespace-pre-line` keeps line breaks typed in Biponon.
+
+**3. `generateMetadata` in the same file.**
+Title = product name. Look at `app/[shop]/layout.tsx`: it does the same for the shop name.
+Unknown product → `"Product not found"`.
+
+**4. `app/[shop]/products/[product]/not-found.tsx`.**
+"This product isn't available", with a link back to the shop. Next.js uses the
+**nearest** `not-found.tsx`, so this one wins over `app/[shop]/not-found.tsx`.
+(Hint: `not-found.tsx` gets no `params`, so it doesn't know the shop slug. Read it with
+`useParams()`, which needs `"use client"` at the top of the file.)
+
+**5. The picker: `components/variant-picker.tsx` — your first Client Component.**
+The page is a Server Component: it runs once on the server and can't react to clicks.
+Anything with `useState` or `onClick` needs `"use client"` as the file's first line.
+
+- Props: `sizes`, `colors`, `variants`, `currency`, `price` (the min/max range). The page
+  passes them in. Props sent from server to client must be plain data (strings, numbers,
+  arrays, objects — no functions, no `Date`).
+- Import types only: `import type { ProductVariant } from "@/lib/api"`. A normal import
+  of `lib/api.ts` would break the build because of `"server-only"` — try it once to see
+  the error.
+- State: `const [sizeId, setSizeId] = useState<number | null>(...)` and the same for colour.
+  If there is only one size (or colour), start with it selected.
+- The chosen variant: `variants.find(v => v.size_id === sizeId && v.color_id === colorId)`.
+- Size buttons: `<Button variant={selected ? "default" : "outline"}>` from
+  `components/ui/button`. Disable a size when no variant with that size (and the chosen
+  colour, if any) is in stock. Same rule the other way round for colours. Show a small
+  round swatch with `style={{ backgroundColor: color.hex }}` when `hex` is set.
+- Price: the chosen variant's price with `formatMoney`, otherwise `formatPriceRange`.
+  (`lib/money.ts` has no `"server-only"`, so the client can use it.)
+- Below: "In stock" / "Out of stock" for the chosen variant, or "Choose a size and colour".
+- "Add to cart" `<Button disabled>` for now.
+
+### Checklist before you ask me to review
+
+- [ ] `npm run lint` and `npx tsc --noEmit` pass; `npm run build` shows the new route.
+- [ ] A product with several sizes/colours, one with a single variant, and one with no photo all look right.
+- [ ] Out-of-stock combinations can't be chosen.
+- [ ] `/demo-fashion/products/nope` shows your not-found page.
+- [ ] With the shop switched off in Biponon (wait a minute for the cache), the product page is not found.
+- [ ] The browser tab shows the product name.
+- [ ] Phone width (DevTools device mode): one column, nothing sticks out sideways.
+
+### Exercises
+
+1. In the picker, `console.log` the chosen variant. Where does the log appear: the
+   terminal or the browser console? Now `console.log` in the page component. Why the difference?
+2. `components/product-gallery.tsx` is a Client Component because the thumbnails swap the
+   big photo. Remove `"use client"` and read the error. Then explain why the description,
+   right next to it, can stay on the server.
+3. In `app/[shop]/layout.tsx`, change the metadata to `title: { template: "%s · " + shop.name, default: shop.name }`.
+   What does the tab show on the product page now?
+4. Explain out loud: why is the page a Server Component and only the picker a Client
+   Component, instead of putting `"use client"` on the whole page?
+5. In `variant-picker.tsx`, choose a size, then a colour that is crossed out. What happens to
+   the size, and which function does that?
 
 ## Step 3c: cart · Step 3d: checkout (cash on delivery) · Step 4: deploy to Vercel
 
