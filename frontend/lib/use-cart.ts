@@ -63,9 +63,14 @@ export function useCart() {
       writeLines(key, removeFromLines(readLines(key), variantId));
     },
     clear() {
-      writeLines(key, []);
+      emptyCart(shop);
     },
   };
+}
+
+/** Empty a shop's cart; usable outside rendering (e.g. in an effect) because it is not a hook. */
+export function emptyCart(shop: string) {
+  writeLines(`biponon-cart:${shop}`, []);
 }
 
 // ---- The store: localStorage + the components to tell about changes ----

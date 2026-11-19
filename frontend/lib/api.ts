@@ -118,6 +118,58 @@ export async function getProducts(
   return getJson<Paginated<ProductCard>>(`/shops/${encodeURIComponent(slug)}/products${queryString}`);
 }
 
+/** What POST /orders needs. (The `website` honeypot is checked in the Server Action before this.) */
+export type OrderRequest = {
+  name: string;
+  phone: string;
+  email: string | null;
+  address: string;
+  note: string | null;
+  lines: { variant_id: number; quantity: number }[];
+};
+
+export type OrderResult =
+  | { ok: true; order: { number: string; total: string; currency: string } }
+  /** 422: Laravel's messages by field, e.g. { "phone": [...], "lines.0.quantity": [...] }. */
+  | { ok: false; reason: "invalid"; message: string; errors: Record<string, string[]> }
+  | { ok: false; reason: "too-many" | "not-found" | "failed" };
+
+/**
+ * Place a cash-on-delivery order; it lands in Biponon as a draft sales order.
+ * Never cached ("use cache" is only for reading). Answers instead of throwing, so the
+ * checkout can always show a message.
+ */
+export async function placeOrder(shopSlug: string, order: OrderRequest): Promise<OrderResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/shops/${encodeURIComponent(shopSlug)}/orders`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(order),
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error("Biponon API: placing an order failed", error);
+    return { ok: false, reason: "failed" };
+  }
+
+  if (response.status === 201) {
+    const body = (await response.json()) as { data: { number: string; total: string; currency: string } };
+    return { ok: true, order: { number: body.data.number, total: body.data.total, currency: body.data.currency } };
+  }
+
+  if (response.status === 422) {
+    const body = (await response.json()) as { message?: string; errors?: Record<string, string[]> };
+    return { ok: false, reason: "invalid", message: body.message ?? "", errors: body.errors ?? {} };
+  }
+
+  if (response.status === 429) return { ok: false, reason: "too-many" };
+  if (response.status === 404) return { ok: false, reason: "not-found" };
+
+  console.error(`Biponon API: placing an order answered ${response.status}`);
+  return { ok: false, reason: "failed" };
+}
+
 /** One product page: photos, sizes, colors and orderable variants. Null when the product or shop is not found. */
 export async function getProduct(shopSlug: string, productSlug: string): Promise<ProductDetail | null> {
   "use cache";

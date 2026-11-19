@@ -320,6 +320,87 @@ fetch, client for what lives in the browser or reacts to clicks.
 
 ---
 
-## Step 3d: checkout (cash on delivery) · Step 4: deploy to Vercel
+## Step 3d: checkout (cash on delivery) ✅
 
-Notes are added here as we build each one.
+`/demo-fashion/checkout`: name, phone, address, optional email and note, the order summary,
+and "Place order". The order lands in Biponon as a **draft sales order** for the manager to
+confirm; the shopper sees the order number and the cart is emptied.
+
+Course chapters: 12 (mutating data), 14 (improving accessibility: form validation).
+Docs: `01-app/01-getting-started/07-mutating-data.md`, `01-app/02-guides/forms.md`.
+
+Read in this order: `lib/checkout.ts` → `lib/api.ts` (`placeOrder`) →
+`app/[shop]/checkout/actions.ts` → `app/[shop]/checkout/page.tsx` → `components/checkout-view.tsx`.
+
+### 1. Server Actions
+
+`actions.ts` starts with `"use server"`. Its exported functions run **only on the Next.js
+server**, but a Client Component can import one and use it as a form's `action`. Next.js
+turns that into a POST request behind the scenes. That is how the form reaches Laravel
+without the browser ever learning `BIPONON_API_URL`.
+
+A Server Action is a **public endpoint**: anyone can call it with any data. So it checks
+everything again (`checkValues`, `parseOrderLines`) instead of trusting the form, and
+Laravel checks a third time (stock, open shop, phone).
+
+### 2. `useActionState`: form state from the server
+
+```ts
+const [state, formAction, pending] = useActionState(submitCheckout.bind(null, shopSlug), INITIAL_CHECKOUT_STATE);
+```
+
+- `formAction` goes on `<form action={formAction}>`.
+- When the form is sent, React calls the action with `(previous state, form data)` and
+  shows its answer as `state`: `idle`, `error` (messages per field and per cart line) or
+  `placed` (order number).
+- `pending` is true while it runs: the button shows "Placing order…" and is disabled, so a
+  double-click can't place two orders.
+- `.bind(null, shopSlug)` fixes the first argument (the shop), so React only adds the rest.
+
+### 3. Showing errors
+
+- Each field has `aria-invalid` and `aria-describedby` pointing to its message, so screen
+  readers read the error with the field.
+- **React empties a form after its action runs.** That's why the action sends back `values`
+  and each input uses `defaultValue={failed?.values[field]}`: after an error, what the
+  shopper typed is still there.
+- Laravel's errors come back as keys like `lines.2.quantity`. `fromLaravelErrors()` turns
+  the `2` back into a variant id, so "Not enough in stock." appears under the right item.
+- `noValidate` on the form turns off the browser's own popups so all messages look the same.
+
+### 4. The cart goes with the form
+
+The cart lives in the browser, so the form carries it in a hidden field (`name="lines"`,
+just variant ids and quantities as JSON). Prices are *not* sent: Laravel works out the
+total from its own prices.
+
+The cart is emptied in a `useEffect` **after** the "order placed" message is on screen.
+Emptying it inside the action re-rendered with an empty cart first, which flashed
+"Your cart is empty" for a moment.
+
+### 5. Spam protection
+
+- **Honeypot:** a `website` field moved far off-screen. People never see it; simple bots
+  fill every field, and the action rejects the order.
+- **Rate limit:** Laravel allows 30 orders a minute per shop and 5 an hour per phone
+  number. They're counted per shop and phone, not per IP, because every order comes from
+  the same Next.js server.
+
+### Exercises
+
+1. Submit the form empty. Which messages appear, and did the request reach Laravel?
+   (Hint: look at `checkValues` and Laravel's log.)
+2. Put 10 of an item in the cart, then lower its stock in Biponon below 10 and place the
+   order. Where does "Not enough in stock." appear?
+3. In DevTools → Elements, find the honeypot field, type something into it and submit.
+   What happens?
+4. Place a real order and find it in Biponon (Sales orders, draft). Which customer did
+   it create or match, and what does the note say?
+5. Explain out loud: why does the browser post to a Server Action instead of calling the
+   Laravel API directly?
+
+---
+
+## Step 4: deploy to Vercel
+
+Notes are added here when we get there.

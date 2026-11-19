@@ -28,9 +28,13 @@ Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, shadcn/ui.
 | `app/[shop]/page.tsx` | Product grid with search and pages |
 | `app/[shop]/products/[product]/page.tsx` | Product page: photos, size and color, add to cart |
 | `app/[shop]/cart/page.tsx` | Cart: quantities, remove, subtotal |
+| `app/[shop]/checkout/page.tsx` | Checkout form (cash on delivery) and order summary |
+| `app/[shop]/checkout/actions.ts` | Server Action: checks the form, places the order through the API |
+| `lib/checkout.ts` | Checkout fields, first checks and form state, no React |
 | `app/[shop]/not-found.tsx` | Unknown shop |
 | `components/` | Product card, search, pagination, gallery, variant picker, cart icon and cart view; `components/ui/` = shadcn |
 
 The cart is kept in the shopper's browser (`localStorage`, one per shop) until checkout.
+Placing an order creates a draft sales order in Biponon for the shop's manager to confirm.
 
 Learning notes for each step: [LEARNING.md](LEARNING.md). UI credits: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

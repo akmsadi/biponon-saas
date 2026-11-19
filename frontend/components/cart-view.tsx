@@ -56,10 +56,15 @@ export function CartView({ shopSlug, currency, open }: { shopSlug: string; curre
           Cash on delivery. The shop confirms your order and the final total.
         </p>
 
-        {/* Step 3d: the checkout page (name, phone, address) that places the order. */}
-        <Button size="lg" className="mt-6 w-full" disabled title="Coming soon">
-          Checkout
-        </Button>
+        {open ? (
+          <Button asChild size="lg" className="mt-6 w-full">
+            <Link href={`/${shopSlug}/checkout`}>Checkout</Link>
+          </Button>
+        ) : (
+          <Button size="lg" className="mt-6 w-full" disabled>
+            Checkout
+          </Button>
+        )}
         {!open && (
           <p className="mt-3 text-sm text-destructive">The shop is closed right now, so orders can&apos;t be placed.</p>
         )}
