@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInita802496999173b8eb37c01315f590896
+class ComposerStaticInit7337fa38a12fa934e4ed3d016f211605
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -15,8 +15,8 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
-        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '5897ea0ac4cccf14d323035e65887801' => __DIR__ . '/..' . '/symfony/polyfill-php82/bootstrap.php',
+        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '606a39d89246991a373564698c2d8383' => __DIR__ . '/..' . '/symfony/polyfill-php85/bootstrap.php',
         '662a729f963d39afe703c9d9b7ab4a8c' => __DIR__ . '/..' . '/symfony/polyfill-php83/bootstrap.php',
         '2203a247e6fda86070a5e4e07aed533a' => __DIR__ . '/..' . '/symfony/clock/Resources/now.php',
@@ -39,6 +39,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         '58571171fd5812e6e447dce228f52f4d' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Support/helpers.php',
         '801c31d8ed748cfa537fa45402288c95' => __DIR__ . '/..' . '/psy/psysh/src/functions.php',
         '98caa11a197f6516a8e48aa4abb5ccc6' => __DIR__ . '/..' . '/inertiajs/inertia-laravel/helpers.php',
+        '0754989a10baadda533479884b399278' => __DIR__ . '/..' . '/resend/resend-php/src/Resend.php',
         '0c3c22e27afa83be19b4c938f4c6e9ea' => __DIR__ . '/..' . '/spatie/laravel-backup/src/Helpers/functions.php',
     );
 
@@ -109,6 +110,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         ),
         'R' =>
         array (
+            'Resend\\' => 7,
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
         ),
@@ -403,6 +405,10 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         array (
             0 => __DIR__ . '/..' . '/spatie/laravel-backup/src',
         ),
+        'Resend\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/resend/resend-php/src',
+        ),
         'Ramsey\\Uuid\\' =>
         array (
             0 => __DIR__ . '/..' . '/ramsey/uuid/src',
@@ -657,6 +663,7 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         'App\\Concerns\\ValidatesReturnedSerialNumbers' => __DIR__ . '/../..' . '/app/Concerns/ValidatesReturnedSerialNumbers.php',
         'App\\Console\\Commands\\DemoCommand' => __DIR__ . '/../..' . '/app/Console/Commands/DemoCommand.php',
         'App\\Console\\Commands\\SuperAdminCommand' => __DIR__ . '/../..' . '/app/Console/Commands/SuperAdminCommand.php',
+        'App\\Console\\Commands\\TestMailCommand' => __DIR__ . '/../..' . '/app/Console/Commands/TestMailCommand.php',
         'App\\Http\\Controllers\\AccessRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/AccessRequestController.php',
         'App\\Http\\Controllers\\Admin\\AccessRequestController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/AccessRequestController.php',
         'App\\Http\\Controllers\\Admin\\OrganizationController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/OrganizationController.php',
@@ -5153,6 +5160,99 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
         'Random\\RandomError' => __DIR__ . '/..' . '/symfony/polyfill-php82/Resources/stubs/Random/RandomError.php',
         'Random\\RandomException' => __DIR__ . '/..' . '/symfony/polyfill-php82/Resources/stubs/Random/RandomException.php',
         'ReflectionConstant' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/ReflectionConstant.php',
+        'Resend\\ApiKey' => __DIR__ . '/..' . '/resend/resend-php/src/ApiKey.php',
+        'Resend\\Audience' => __DIR__ . '/..' . '/resend/resend-php/src/Audience.php',
+        'Resend\\Automation' => __DIR__ . '/..' . '/resend/resend-php/src/Automation.php',
+        'Resend\\Automations\\Run' => __DIR__ . '/..' . '/resend/resend-php/src/Automations/Run.php',
+        'Resend\\Broadcast' => __DIR__ . '/..' . '/resend/resend-php/src/Broadcast.php',
+        'Resend\\Broadcasts\\ClickedLink' => __DIR__ . '/..' . '/resend/resend-php/src/Broadcasts/ClickedLink.php',
+        'Resend\\Broadcasts\\Recipient' => __DIR__ . '/..' . '/resend/resend-php/src/Broadcasts/Recipient.php',
+        'Resend\\Client' => __DIR__ . '/..' . '/resend/resend-php/src/Client.php',
+        'Resend\\Collection' => __DIR__ . '/..' . '/resend/resend-php/src/Collection.php',
+        'Resend\\Contact' => __DIR__ . '/..' . '/resend/resend-php/src/Contact.php',
+        'Resend\\ContactProperty' => __DIR__ . '/..' . '/resend/resend-php/src/ContactProperty.php',
+        'Resend\\Contacts\\Import' => __DIR__ . '/..' . '/resend/resend-php/src/Contacts/Import.php',
+        'Resend\\Contacts\\Topic' => __DIR__ . '/..' . '/resend/resend-php/src/Contacts/Topic.php',
+        'Resend\\Contracts\\Client' => __DIR__ . '/..' . '/resend/resend-php/src/Contracts/Client.php',
+        'Resend\\Contracts\\Resource' => __DIR__ . '/..' . '/resend/resend-php/src/Contracts/Resource.php',
+        'Resend\\Contracts\\Stringable' => __DIR__ . '/..' . '/resend/resend-php/src/Contracts/Stringable.php',
+        'Resend\\Contracts\\Transporter' => __DIR__ . '/..' . '/resend/resend-php/src/Contracts/Transporter.php',
+        'Resend\\Domain' => __DIR__ . '/..' . '/resend/resend-php/src/Domain.php',
+        'Resend\\Domains\\Claim' => __DIR__ . '/..' . '/resend/resend-php/src/Domains/Claim.php',
+        'Resend\\Email' => __DIR__ . '/..' . '/resend/resend-php/src/Email.php',
+        'Resend\\Emails\\Attachment' => __DIR__ . '/..' . '/resend/resend-php/src/Emails/Attachment.php',
+        'Resend\\Emails\\Receiving' => __DIR__ . '/..' . '/resend/resend-php/src/Emails/Receiving.php',
+        'Resend\\Enums\\Transporter\\ContentType' => __DIR__ . '/..' . '/resend/resend-php/src/Enums/Transporter/ContentType.php',
+        'Resend\\Enums\\Transporter\\Method' => __DIR__ . '/..' . '/resend/resend-php/src/Enums/Transporter/Method.php',
+        'Resend\\Event' => __DIR__ . '/..' . '/resend/resend-php/src/Event.php',
+        'Resend\\Exceptions\\ErrorException' => __DIR__ . '/..' . '/resend/resend-php/src/Exceptions/ErrorException.php',
+        'Resend\\Exceptions\\MissingAttributeException' => __DIR__ . '/..' . '/resend/resend-php/src/Exceptions/MissingAttributeException.php',
+        'Resend\\Exceptions\\TransporterException' => __DIR__ . '/..' . '/resend/resend-php/src/Exceptions/TransporterException.php',
+        'Resend\\Exceptions\\UnserializableResponse' => __DIR__ . '/..' . '/resend/resend-php/src/Exceptions/UnserializableResponse.php',
+        'Resend\\Exceptions\\WebhookSignatureVerificationException' => __DIR__ . '/..' . '/resend/resend-php/src/Exceptions/WebhookSignatureVerificationException.php',
+        'Resend\\Inbox' => __DIR__ . '/..' . '/resend/resend-php/src/Inbox.php',
+        'Resend\\Inboxes\\Agent' => __DIR__ . '/..' . '/resend/resend-php/src/Inboxes/Agent.php',
+        'Resend\\Inboxes\\Draft' => __DIR__ . '/..' . '/resend/resend-php/src/Inboxes/Draft.php',
+        'Resend\\Inboxes\\Label' => __DIR__ . '/..' . '/resend/resend-php/src/Inboxes/Label.php',
+        'Resend\\Inboxes\\Thread' => __DIR__ . '/..' . '/resend/resend-php/src/Inboxes/Thread.php',
+        'Resend\\Inboxes\\Threads\\Email' => __DIR__ . '/..' . '/resend/resend-php/src/Inboxes/Threads/Email.php',
+        'Resend\\Log' => __DIR__ . '/..' . '/resend/resend-php/src/Log.php',
+        'Resend\\Metrics' => __DIR__ . '/..' . '/resend/resend-php/src/Metrics.php',
+        'Resend\\Resource' => __DIR__ . '/..' . '/resend/resend-php/src/Resource.php',
+        'Resend\\Segment' => __DIR__ . '/..' . '/resend/resend-php/src/Segment.php',
+        'Resend\\Service\\ApiKey' => __DIR__ . '/..' . '/resend/resend-php/src/Service/ApiKey.php',
+        'Resend\\Service\\Audience' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Audience.php',
+        'Resend\\Service\\Automation' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Automation.php',
+        'Resend\\Service\\Automations\\Run' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Automations/Run.php',
+        'Resend\\Service\\Batch' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Batch.php',
+        'Resend\\Service\\Broadcast' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Broadcast.php',
+        'Resend\\Service\\Broadcasts\\ClickedLink' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Broadcasts/ClickedLink.php',
+        'Resend\\Service\\Contact' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Contact.php',
+        'Resend\\Service\\ContactProperty' => __DIR__ . '/..' . '/resend/resend-php/src/Service/ContactProperty.php',
+        'Resend\\Service\\Contacts\\Import' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Contacts/Import.php',
+        'Resend\\Service\\Contacts\\Segment' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Contacts/Segment.php',
+        'Resend\\Service\\Contacts\\Topic' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Contacts/Topic.php',
+        'Resend\\Service\\Domain' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Domain.php',
+        'Resend\\Service\\Domains\\Claim' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Domains/Claim.php',
+        'Resend\\Service\\Domains\\Forge' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Domains/Forge.php',
+        'Resend\\Service\\Email' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Email.php',
+        'Resend\\Service\\Emails\\Attachment' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Emails/Attachment.php',
+        'Resend\\Service\\Emails\\Receiving' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Emails/Receiving.php',
+        'Resend\\Service\\Emails\\Receiving\\Attachment' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Emails/Receiving/Attachment.php',
+        'Resend\\Service\\Event' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Event.php',
+        'Resend\\Service\\Inbox' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inbox.php',
+        'Resend\\Service\\Inboxes\\Agent' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Agent.php',
+        'Resend\\Service\\Inboxes\\Draft' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Draft.php',
+        'Resend\\Service\\Inboxes\\Label' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Label.php',
+        'Resend\\Service\\Inboxes\\Thread' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Thread.php',
+        'Resend\\Service\\Inboxes\\Threads\\Email' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Threads/Email.php',
+        'Resend\\Service\\Inboxes\\Threads\\Label' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Inboxes/Threads/Label.php',
+        'Resend\\Service\\Log' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Log.php',
+        'Resend\\Service\\Segment' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Segment.php',
+        'Resend\\Service\\Service' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Service.php',
+        'Resend\\Service\\ServiceFactory' => __DIR__ . '/..' . '/resend/resend-php/src/Service/ServiceFactory.php',
+        'Resend\\Service\\Suppression' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Suppression.php',
+        'Resend\\Service\\Suppressions\\Batch' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Suppressions/Batch.php',
+        'Resend\\Service\\Template' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Template.php',
+        'Resend\\Service\\Topic' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Topic.php',
+        'Resend\\Service\\Usage' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Usage.php',
+        'Resend\\Service\\Webhook' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Webhook.php',
+        'Resend\\Service\\Webhooks\\Event' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Webhooks/Event.php',
+        'Resend\\Service\\Webhooks\\EventAttempt' => __DIR__ . '/..' . '/resend/resend-php/src/Service/Webhooks/EventAttempt.php',
+        'Resend\\Suppression' => __DIR__ . '/..' . '/resend/resend-php/src/Suppression.php',
+        'Resend\\Template' => __DIR__ . '/..' . '/resend/resend-php/src/Template.php',
+        'Resend\\Topic' => __DIR__ . '/..' . '/resend/resend-php/src/Topic.php',
+        'Resend\\Transporters\\HttpTransporter' => __DIR__ . '/..' . '/resend/resend-php/src/Transporters/HttpTransporter.php',
+        'Resend\\Usage' => __DIR__ . '/..' . '/resend/resend-php/src/Usage.php',
+        'Resend\\ValueObjects\\ApiKey' => __DIR__ . '/..' . '/resend/resend-php/src/ValueObjects/ApiKey.php',
+        'Resend\\ValueObjects\\ResourceUri' => __DIR__ . '/..' . '/resend/resend-php/src/ValueObjects/ResourceUri.php',
+        'Resend\\ValueObjects\\Transporter\\BaseUri' => __DIR__ . '/..' . '/resend/resend-php/src/ValueObjects/Transporter/BaseUri.php',
+        'Resend\\ValueObjects\\Transporter\\Headers' => __DIR__ . '/..' . '/resend/resend-php/src/ValueObjects/Transporter/Headers.php',
+        'Resend\\ValueObjects\\Transporter\\Payload' => __DIR__ . '/..' . '/resend/resend-php/src/ValueObjects/Transporter/Payload.php',
+        'Resend\\Webhook' => __DIR__ . '/..' . '/resend/resend-php/src/Webhook.php',
+        'Resend\\WebhookSignature' => __DIR__ . '/..' . '/resend/resend-php/src/WebhookSignature.php',
+        'Resend\\Webhooks\\Event' => __DIR__ . '/..' . '/resend/resend-php/src/Webhooks/Event.php',
+        'Resend\\Webhooks\\EventAttempt' => __DIR__ . '/..' . '/resend/resend-php/src/Webhooks/EventAttempt.php',
         'ReturnTypeWillChange' => __DIR__ . '/..' . '/symfony/polyfill-php81/Resources/stubs/ReturnTypeWillChange.php',
         'RoundingMode' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/RoundingMode.php',
         'SQLite3Exception' => __DIR__ . '/..' . '/symfony/polyfill-php83/Resources/stubs/SQLite3Exception.php',
@@ -7228,9 +7328,9 @@ class ComposerStaticInita802496999173b8eb37c01315f590896
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInita802496999173b8eb37c01315f590896::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInita802496999173b8eb37c01315f590896::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInita802496999173b8eb37c01315f590896::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit7337fa38a12fa934e4ed3d016f211605::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit7337fa38a12fa934e4ed3d016f211605::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit7337fa38a12fa934e4ed3d016f211605::$classMap;
 
         }, null, ClassLoader::class);
     }
