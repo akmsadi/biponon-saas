@@ -75,7 +75,7 @@ jobs:
 
           # Replace everything with this build.
           find ../release -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          git ls-files -z -- backend .cpanel.yml ':!backend/tests' \
+          git ls-files -z -- backend .cpanel.yml .github/deploy/auto-deploy.sh ':!backend/tests' \
             | rsync -a --from0 --files-from=- ./ ../release/
           rsync -a backend/vendor/ ../release/backend/vendor/
           rsync -a backend/public/build/ ../release/backend/public/build/

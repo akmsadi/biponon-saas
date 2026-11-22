@@ -10,7 +10,8 @@ push to main ──► GitHub Action: tests, composer --no-dev, npm run build
                        ▼
                  `production` branch (code + vendor/ + public/build, ready to run)
                        │
-cPanel Git Version Control: "Update from Remote" → "Deploy HEAD Commit"
+auto-deploy cron (every 5 min) or by hand in cPanel Git Version Control:
+"Update from Remote" → "Deploy HEAD Commit"
                        │
                        ▼
        .cpanel.yml: php artisan migrate --force, php artisan optimize
@@ -18,7 +19,8 @@ cPanel Git Version Control: "Update from Remote" → "Deploy HEAD Commit"
 
 - The server never builds anything: it has PHP but no composer or npm.
 - `main` stays clean; only the `production` branch carries `vendor/` and `public/build`.
-- Deploys are a manual click, so database migrations only run when you choose.
+- Deploys happen on their own within about 5 minutes of a green build (step 10), migrations
+  included. Pause that when a risky migration is coming and deploy by hand instead.
 - Server-only files never touch git: `backend/.env`, `storage/` contents (logs, sessions, backups).
 
 | Piece | File |
@@ -26,6 +28,7 @@ cPanel Git Version Control: "Update from Remote" → "Deploy HEAD Commit"
 | Build + publish | `.github/workflows/production-build.yml` |
 | Ignore rules on `production` | `.github/deploy/production.gitignore` |
 | Deploy steps on the server | `.cpanel.yml` |
+| Auto deploy (cron, on the server) | `.github/deploy/auto-deploy.sh` |
 | Production settings template | `backend/.env.production.example` |
 | Queue + backup schedule | `backend/routes/console.php` |
 
@@ -195,16 +198,69 @@ It asks for your name and a password (typed hidden) and creates a verified super
 Log in, then **Organizations → New organization** with the organization's admin email. You get an
 invitation link to copy (no mail provider yet); the admin opens it to set up their account.
 
+### 10. Auto deploy (cron, every 5 minutes)
+
+**Why:** so a green build goes live without clicking the two buttons. The server asks GitHub
+"is there a new build?" every 5 minutes; nothing on the server has to accept connections from
+outside, and no keys go into GitHub.
+
+**a. Get the script onto the server.** It arrives with the first build after this change: push,
+wait for the green build, then deploy once by hand (**Update from Remote** → **Deploy HEAD Commit**).
+Check it's there:
+
+```bash
+ls ~/biponon/.github/deploy/auto-deploy.sh
+```
+
+**b. Try it once by hand** (it prints nothing when there is nothing new; that's success):
+
+```bash
+/bin/bash ~/biponon/.github/deploy/auto-deploy.sh; echo "exit code $?"
+```
+
+- `exit code 0` and no other output → working, already up to date.
+- `uapi: command not found` → tell me; we'll switch to running the `.cpanel.yml` steps directly.
+
+**c. Add the job.** cPanel → **Cron Jobs** → **Add New Cron Job**:
+- **Common Settings:** **Once Per Five Minutes (\*/5 \* \* \* \*)**.
+- **Command:**
+
+```bash
+/bin/bash /home/myperson/biponon/.github/deploy/auto-deploy.sh >> /home/myperson/auto-deploy.log 2>&1
+```
+
+The log only gets lines when a deploy happens (or fails), so it stays small.
+
+**d. Check it after the next push:**
+
+```bash
+cat ~/auto-deploy.log
+```
+
+Each deploy writes `[date] old → new: commit message` and `Deploy started`. The deploy's own output
+(migrations, optimize) is in cPanel → **Git™ Version Control → biponon → Manage → Pull or Deploy**.
+
+**Pause / resume** (e.g. before a migration you want to watch):
+
+```bash
+touch ~/auto-deploy.off    # pause
+rm ~/auto-deploy.off       # resume
+```
+
 ---
 
 ## Every update
 
 1. Push to `main` (or merge into it).
 2. Wait for **Production build** to go green in GitHub → Actions (a red build never reaches `production`).
-3. cPanel → **Git™ Version Control → biponon → Manage → Pull or Deploy**:
+3. Within 5 minutes the cron job deploys it (see `~/auto-deploy.log`). To deploy right away, or while
+   auto deploy is paused: cPanel → **Git™ Version Control → biponon → Manage → Pull or Deploy**:
    **Update from Remote**, then **Deploy HEAD Commit**.
 
 The deploy runs `migrate --force` and `optimize`. Its log is under the same page.
+
+**Rolled back by hand?** Pause auto deploy first (`touch ~/auto-deploy.off`), or the next tick will
+deploy the latest build again.
 
 If `.env` changes later, run `php artisan optimize` again (settings are cached).
 
