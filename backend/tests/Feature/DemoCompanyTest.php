@@ -59,6 +59,22 @@ class DemoCompanyTest extends TestCase
         $this->assertSame(3, User::where('is_demo', true)->whereIn('email', array_column(BuildDemoCompany::ACCOUNTS, 'email'))->count());
     }
 
+    public function test_the_demo_company_shop_is_open_and_lists_every_active_product(): void
+    {
+        $this->artisan('biponon:demo')->assertSuccessful();
+
+        $this->getJson('/api/v1/shops/'.BuildDemoCompany::SLUG)
+            ->assertOk()
+            ->assertJsonPath('data.open', true);
+
+        $names = collect($this->getJson('/api/v1/shops/'.BuildDemoCompany::SLUG.'/products')->assertOk()->json('data'))
+            ->pluck('name');
+
+        $this->assertCount(9, $names);
+        $this->assertContains('Classic Cotton T-Shirt', $names);
+        $this->assertNotContains('Track Joggers', $names);
+    }
+
     public function test_the_login_page_offers_the_demo_accounts_only_in_demo_mode(): void
     {
         $this->artisan('biponon:demo')->assertSuccessful();
