@@ -403,4 +403,55 @@ Emptying it inside the action re-rendered with an empty cart first, which flashe
 
 ## Step 4: deploy to Vercel
 
-Notes are added here when we get there.
+**Goal:** the shop live at https://shop.mypersonalwork.com, rebuilt on every push.
+Setup steps are in [README.md](README.md#deploy-vercel); this section explains what is going on.
+
+### What Vercel does with the app
+
+`next build` sorts every route into two kinds. Parts that don't depend on the request are
+**prerendered** once at build time into static HTML (the shell: header, layout, the
+loading skeletons). Parts inside `<Suspense>` that read data are **streamed** at request
+time by Vercel Functions (small servers that start on demand). With Cache Components, the
+`"use cache"` results in `lib/api.ts` are kept between requests for about a minute, so
+most visits don't call Laravel at all.
+
+### Build time vs run time
+
+`BIPONON_API_URL` is used in two places:
+- `lib/api.ts` reads it at **run time**, on the server, for every API call.
+- `next.config.ts` reads it at **build time**, to allow photos from that host in
+  `next/image`. A config file is evaluated when the app is built, not per request.
+
+So changing the variable in Vercel only takes full effect after a **redeploy**. Because it
+has no `NEXT_PUBLIC_` prefix, it is never put into the JavaScript sent to browsers.
+
+### Which pushes deploy
+
+`vercel.json` holds two rules:
+- `ignoreCommand`: Vercel runs `git diff HEAD^ HEAD --quiet -- .` inside `frontend/`. Exit
+  code 0 means "nothing changed here", and Vercel skips the build. A Laravel-only commit
+  costs no build minutes.
+- `git.deploymentEnabled.production: false`: the `production` branch holds the Laravel
+  build for cPanel; Vercel never builds it.
+
+Any other branch you push gets a **preview deployment** with its own URL: a full copy of
+the shop to test before merging into `main`.
+
+### Domains and DNS
+
+The domain stays at the current host. A **CNAME** record says "`shop.mypersonalwork.com` is
+another name for Vercel's address", so browsers asking for the shop are sent to Vercel,
+while `saas-backend.mypersonalwork.com` and email keep pointing at cPanel. Vercel sees the
+domain point at it and issues the HTTPS certificate itself.
+
+### Exercises
+
+1. In the Vercel dashboard, open the latest deployment → **Build Logs**. Find the route
+   list at the end. Which routes are fully static (○) and which partly prerendered (◐)?
+   What part of a ◐ page is in the static HTML, and what is streamed in later?
+2. Push a commit that only changes `backend/`. What does Vercel show for it, and why?
+3. Make a branch, change the shop's home page text, push it, and open the preview URL.
+   Is the live site changed?
+4. In **Runtime Logs**, open a product page and look at the requests. Reload within a
+   minute: does Laravel get called again? Why or why not?
+5. Explain out loud: why can't this app run on the cPanel server next to Laravel?
