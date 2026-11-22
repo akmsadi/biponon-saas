@@ -112,6 +112,11 @@ class BuildDemoCompany
     ];
 
     /**
+     * Shop photos for the products, one file per product code, relative to resources/.
+     */
+    private const PHOTO_FOLDER = 'demo/products';
+
+    /**
      * Products sold in the everyday sales orders.
      *
      * @var list<string>
@@ -372,6 +377,8 @@ class BuildDemoCompany
                 'show_in_shop' => $definition['is_active'],
             ]);
 
+            $this->attachBundledPhoto($product, $definition['code']);
+
             foreach ($definition['sizes'] as $sizeCode) {
                 foreach ($definition['colors'] as $colorCode) {
                     $sku = "{$definition['code']}-{$sizeCode}-{$colorCode}";
@@ -388,6 +395,33 @@ class BuildDemoCompany
                     ]);
                 }
             }
+        }
+    }
+
+    /**
+     * Gives the product its shop photo from resources/demo/products/{code}.webp|jpg|png (credits in CREDITS.md
+     * there), copied onto the public disk like an uploaded photo. Products without a file keep the placeholder.
+     */
+    private function attachBundledPhoto(Product $product, string $code): void
+    {
+        foreach (['webp', 'jpg', 'png'] as $extension) {
+            $source = self::PHOTO_FOLDER.'/'.strtolower($code).'.'.$extension;
+
+            if (! is_file(resource_path($source))) {
+                continue;
+            }
+
+            $path = ProductImage::folderFor($product).'/'.Str::random(20).'.'.$extension;
+            Storage::disk(ProductImage::DISK)->put($path, (string) file_get_contents(resource_path($source)));
+
+            ProductImage::create([
+                'organization_id' => $product->organization_id,
+                'product_id' => $product->id,
+                'path' => $path,
+                'sort_order' => 0,
+            ]);
+
+            return;
         }
     }
 

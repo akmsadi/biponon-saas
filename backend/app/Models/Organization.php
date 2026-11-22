@@ -83,6 +83,16 @@ class Organization extends Model
     }
 
     /**
+     * The organization's page on the public shop (SHOP_URL + slug), or null when no shop address is configured.
+     */
+    public function shopLink(): ?string
+    {
+        $shopUrl = config('app.shop_url');
+
+        return $shopUrl ? rtrim($shopUrl, '/').'/'.$this->slug : null;
+    }
+
+    /**
      * The next sales order sequence number. Call inside a transaction: it locks the organization row so two
      * orders created at once cannot take the same number.
      */

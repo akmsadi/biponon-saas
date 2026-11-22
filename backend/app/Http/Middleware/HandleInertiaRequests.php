@@ -59,6 +59,12 @@ class HandleInertiaRequests extends Middleware
             'organizationTimezone' => fn () => $request->attributes->get('organization')?->setting('timezone'),
             // ISO 4217 code that organization pages show money in.
             'organizationCurrency' => fn () => $request->attributes->get('organization')?->setting('currency'),
+            // "Visit shop" in the header: only while the shop is open, since a closed shop shows "not found".
+            'organizationShopLink' => function () use ($request): ?string {
+                $organization = $request->attributes->get('organization');
+
+                return $organization?->shopIsOpen() ? $organization->shopLink() : null;
+            },
 
             // Unanswered landing page requests, counted next to "Access requests" in a super-admin's menu.
             'newAccessRequests' => fn () => $user?->isSuperAdmin()
