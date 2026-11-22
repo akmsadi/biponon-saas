@@ -135,12 +135,14 @@ The suite has 320 PHPUnit tests (318 pass, 2 skipped by design) and runs in abou
 
 ## Deployment and operations
 
-Production is shared cPanel hosting with PHP 8.4 and MySQL, but no Composer, no Node and no long-running processes. So GitHub builds a ready-to-run copy, and cPanel only pulls it. The full first-time setup is in [DEPLOYMENT.md](DEPLOYMENT.md).
+Production is shared cPanel hosting with PHP 8.4 and MySQL, but no Composer, no Node and no long-running processes. So GitHub builds a ready-to-run copy, publishes it and deploys it over SSH; the server only pulls. The full first-time setup is in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 1. Push to `main`.
 2. `.github/workflows/production-build.yml` runs on PHP 8.4 and Node 22. It installs dependencies, builds the assets and runs the tests. It then installs production-only Composer packages and commits the result to the `production` branch: the backend without tests, with `vendor/`, `public/build/` and `.cpanel.yml`. A red run publishes nothing.
-3. In cPanel, open **Git Version Control → Manage → Pull or Deploy**. Click **Update from Remote** (pulls `production` into `~/biponon`), then **Deploy HEAD Commit**.
-4. Deploying runs `.cpanel.yml`: `php artisan migrate --force` and `php artisan optimize` in `~/biponon/backend`.
+3. The same run logs in to the server over SSH with a deploy key (repo secrets `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`, `SSH_HOST`, `SSH_USER`) and runs `.github/deploy/auto-deploy.sh` there: fast-forward `~/biponon` to `origin/production`, then `php artisan migrate --force` and `php artisan optimize` with `/usr/local/bin/php`. The output is in the Actions log.
+4. It then checks `https://saas-backend.mypersonalwork.com/up` and fails the run if the site doesn't answer.
+
+The deploy step runs on every build and does nothing when the server is already current, so **Actions → Production build → Run workflow** retries a failed deploy. `touch ~/auto-deploy.off` on the server pauses deploys (`rm` it to resume). The manual route still works: cPanel **Git Version Control → Manage → Pull or Deploy → Update from Remote**, then **Deploy HEAD Commit**, which runs the same two commands from `.cpanel.yml`. Keep `auto-deploy.sh` and `.cpanel.yml` in step.
 
 The app lives outside the web root. The subdomain's document root (`~/public_html/saas-backend/public`) is a symlink to `~/biponon/backend/public`, so `.env` can't be reached over HTTP. Edit only `backend/.env` on the server; a changed tracked file blocks the next pull.
 
@@ -168,7 +170,7 @@ After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupT
 | `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET`, `DROPBOX_REFRESH_TOKEN` | Dropbox app; empty = uploads skipped |
 | `DROPBOX_BACKUP_FOLDER` | Dropbox folder, default `/saas_database` |
 | `DROPBOX_KEEP_BACKUPS` | Zips kept in that folder, default 7; `0` keeps all |
-| `MAIL_*` | SMTP for invitations; not configured yet, so admins copy the invitation link from the dialog |
+| `MAIL_*` | SMTP for invitations, from a cPanel mailbox (set up 2026-11-17; some mail still lands in spam). Admins can also copy the invitation link from the dialog |
 
 ## Demo mode, landing page and access requests
 
@@ -190,7 +192,6 @@ After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupT
 | React hydration warning on form ids | Use `useId()`, never a module-level counter |
 | MySQL error 1690 "BIGINT UNSIGNED value is out of range" | Unsigned subtraction went negative; `CAST(... AS SIGNED)` (see Testing) |
 | cPanel says "could not contact the remote repository" | Usually a locally modified tracked file on the server. In `~/biponon` run `git status`, discard or stash it, then `git pull origin production` in the terminal for the real error |
-| Members get a bare 403 page on manager-only URLs | Known; the sidebar hides those links, and a styled 403 page is still open |
 | Paths mangled in Git Bash on Windows | Prefix commands with `MSYS_NO_PATHCONV=1` |
 | Production `.env` sets `DROPBOX_FOLDER` but uploads ignore it | The config reads `DROPBOX_BACKUP_FOLDER`; rename the key in the server's .env (the template uses the right name since 2026-11-16) |
 
@@ -206,8 +207,8 @@ Upgrade one framework at a time, on a branch, and ship each upgrade as its own r
 4. **Upgrade one group** (one row of the table below), then `composer install` / `npm install`.
 5. **Regenerate and check:** `php artisan wayfinder:generate --with-form`, `php artisan test --compact`, `npm run types:check`, `npm run build`, `vendor/bin/pint --dirty`.
 6. **Click through the app** on a local MySQL database with demo data (`php artisan biponon:demo --fresh`): log in with each demo role, then open the dashboard, receive and transfer stock, receive a PO, dispatch and return an SO, open all four reports and download one CSV.
-7. **Release.** Merge to `main` and wait for a green Production build, then **Update from Remote** and **Deploy HEAD Commit** in cPanel. Repeat the click-through on the live site.
-8. **Roll back if needed.** In `~/biponon` run `git log` to find the previous `production` commit, then `git reset --hard <commit>` and `php artisan optimize`. Avoid destructive migrations in an upgrade release, so the old code still works with the new database.
+7. **Release.** Merge to `main` and wait for a green Production build; it deploys itself and checks `/up`. Repeat the click-through on the live site.
+8. **Roll back if needed.** First pause deploys (`touch ~/auto-deploy.off`), or the next build puts the new version back. In `~/biponon` run `git log` to find the previous `production` commit, then `git reset --hard <commit>` and `php artisan optimize`. Avoid destructive migrations in an upgrade release, so the old code still works with the new database.
 
 ### What moves together
 
