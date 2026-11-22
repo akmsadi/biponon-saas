@@ -1,25 +1,39 @@
 #!/bin/bash
-# Auto deploy for the cPanel server. A cron job runs this every 5 minutes (see docs/DEPLOYMENT.md,
-# "Auto deploy"). When the `production` branch on GitHub has a new build, it does what the two
-# buttons in cPanel → Git Version Control do: "Update from Remote", then "Deploy HEAD Commit"
-# (which runs .cpanel.yml: migrate --force, optimize). When nothing is new, it prints nothing.
+# Deploys the newest build of the `production` branch on the cPanel server.
 #
-# Pause it:  touch ~/auto-deploy.off      Resume:  rm ~/auto-deploy.off
+# Run by the "Production build" GitHub Action over SSH right after it publishes a build (the
+# workflow sends this file over the connection, so the copy on GitHub is the one that runs).
+# Can also be run by hand in the server Terminal:  bash ~/biponon/.github/deploy/auto-deploy.sh
 #
-# The script lives inside the clone it updates, so everything is inside main(): bash reads the
-# whole function before running it, and a newer copy pulled mid-run can't confuse it.
+# Steps: fast-forward ~/biponon to origin/production, then the same deploy tasks as .cpanel.yml
+# (migrate --force, optimize), so the output and any error show up in the GitHub Actions log.
+# Keep the tasks here and in .cpanel.yml the same (.cpanel.yml is for the manual cPanel button).
+#
+# Pause:  touch ~/auto-deploy.off      Resume:  rm ~/auto-deploy.off
+#
+# Everything is inside main(): bash reads the whole function before running it, so pulling a
+# newer copy of this file mid-run (when run by hand from the clone) can't confuse it.
 
 main() {
   set -euo pipefail
 
+  # When GitHub runs this as `ssh … 'bash -s' < auto-deploy.sh`, standard input IS this file.
+  # Point it at nothing so git, ssh or php can't swallow the rest of the script.
+  exec 0</dev/null
+
   local repo="$HOME/biponon"
   local branch="production"
 
-  [ -e "$HOME/auto-deploy.off" ] && return 0
+  if [ -e "$HOME/auto-deploy.off" ]; then
+    echo "Auto deploy is paused (~/auto-deploy.off exists). Nothing deployed."
+    return 0
+  fi
 
-  # Only one run at a time (a slow fetch must not overlap the next cron tick).
   exec 9>"$HOME/.auto-deploy.lock"
-  flock -n 9 || return 0
+  if ! flock -n 9; then
+    echo "Another deploy is running. Nothing deployed."
+    return 1
+  fi
 
   cd "$repo"
   git fetch --quiet origin "$branch"
@@ -27,27 +41,26 @@ main() {
   local current latest
   current=$(git rev-parse HEAD)
   latest=$(git rev-parse "origin/$branch")
-  [ "$current" = "$latest" ] && return 0
 
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ${current:0:7} → ${latest:0:7}: $(git log -1 --format=%s "$latest" | cut -c1-120)"
-
-  # uapi prints "status: 1" on success and exits 0 even on failure, so check the text.
-  local out
-  out=$(uapi VersionControl update repository_root="$repo" branch="$branch" 2>&1)
-  if ! grep -q '^ *status: 1' <<<"$out"; then
-    echo "  Update from Remote FAILED (nothing deployed):"
-    echo "$out" | sed 's/^/    /'
-    return 1
+  if [ "$current" = "$latest" ]; then
+    echo "Already on the newest build: $(git log -1 --format='%h %s' | cut -c1-120)"
+    return 0
   fi
 
-  out=$(uapi VersionControlDeployment create repository_root="$repo" 2>&1)
-  if ! grep -q '^ *status: 1' <<<"$out"; then
-    echo "  Deploy HEAD Commit FAILED to start:"
-    echo "$out" | sed 's/^/    /'
-    return 1
-  fi
+  echo "Updating ${current:0:7} → ${latest:0:7}: $(git log -1 --format=%s "$latest" | cut -c1-120)"
+  git merge --ff-only --quiet "origin/$branch"
 
-  echo "  Deploy started (log: cPanel → Git Version Control → biponon → Manage → Pull or Deploy)."
+  # The same PHP as the Terminal and the scheduler cron (docs/DEPLOYMENT.md step 2); a login
+  # over SSH without a terminal may find an older default `php` first.
+  local php="/usr/local/bin/php"
+  [ -x "$php" ] || php="php"
+
+  cd "$repo/backend"
+  echo "Using $("$php" -r 'echo "PHP ", PHP_VERSION;')"
+  "$php" artisan migrate --force --no-interaction
+  "$php" artisan optimize
+
+  echo "Deployed $(git log -1 --format=%h)."
 }
 
 main "$@"
