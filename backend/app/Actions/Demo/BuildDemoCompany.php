@@ -32,7 +32,8 @@ use Illuminate\Support\Str;
  * Builds "Demo Fashion Ltd", the organization visitors explore with the shared demo accounts while the site is in
  * demo mode. It touches every feature: catalog, warehouses, stock with serials, plain operations, purchase and
  * sales orders in every status with receipts, dispatches and returns, members and an invitation, so every list,
- * chart and report has something to show.
+ * chart and report has something to show. Its online shop is open with every active product listed, so the
+ * Next.js shop has something to show after each nightly rebuild too.
  *
  * The data is a timeline over the last 150 days, run oldest first through the same RecordStockMovement action
  * the app uses, so balances, movements, orders and reports always agree. A fixed random seed makes every rebuild
@@ -356,6 +357,7 @@ class BuildDemoCompany
             'currency' => 'BDT',
             'default_warehouse_id' => $this->warehouses['CWH']->id,
             'default_reorder_level' => 5,
+            'shop_enabled' => true,
         ]);
         $this->organization->save();
 
@@ -367,6 +369,7 @@ class BuildDemoCompany
                 'name' => $definition['name'],
                 'description' => $definition['description'],
                 'is_active' => $definition['is_active'],
+                'show_in_shop' => $definition['is_active'],
             ]);
 
             foreach ($definition['sizes'] as $sizeCode) {
