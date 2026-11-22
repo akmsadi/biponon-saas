@@ -10,25 +10,28 @@ push to main ──► GitHub Action: tests, composer --no-dev, npm run build
                        ▼
                  `production` branch (code + vendor/ + public/build, ready to run)
                        │
-auto-deploy cron (every 5 min) or by hand in cPanel Git Version Control:
-"Update from Remote" → "Deploy HEAD Commit"
+                       ▼
+same GitHub Action, over SSH: auto-deploy.sh on the server
+   git fast-forward to production, php artisan migrate --force, php artisan optimize
                        │
                        ▼
-       .cpanel.yml: php artisan migrate --force, php artisan optimize
+                 check https://saas-backend.mypersonalwork.com/up
 ```
 
 - The server never builds anything: it has PHP but no composer or npm.
 - `main` stays clean; only the `production` branch carries `vendor/` and `public/build`.
-- Deploys happen on their own within about 5 minutes of a green build (step 10), migrations
-  included. Pause that when a risky migration is coming and deploy by hand instead.
+- Every green build deploys itself, migrations included (step 10). Pause that when a risky
+  migration is coming and deploy by hand instead.
+- By hand still works: cPanel Git Version Control "Update from Remote" → "Deploy HEAD Commit"
+  runs `.cpanel.yml`, which has the same two artisan commands.
 - Server-only files never touch git: `backend/.env`, `storage/` contents (logs, sessions, backups).
 
 | Piece | File |
 |---|---|
-| Build + publish | `.github/workflows/production-build.yml` |
+| Build + publish + deploy | `.github/workflows/production-build.yml` |
 | Ignore rules on `production` | `.github/deploy/production.gitignore` |
-| Deploy steps on the server | `.cpanel.yml` |
-| Auto deploy (cron, on the server) | `.github/deploy/auto-deploy.sh` |
+| Deploy steps (automatic, over SSH) | `.github/deploy/auto-deploy.sh` |
+| Deploy steps (cPanel button) | `.cpanel.yml` |
 | Production settings template | `backend/.env.production.example` |
 | Queue + backup schedule | `backend/routes/console.php` |
 
@@ -198,53 +201,54 @@ It asks for your name and a password (typed hidden) and creates a verified super
 Log in, then **Organizations → New organization** with the organization's admin email. You get an
 invitation link to copy (no mail provider yet); the admin opens it to set up their account.
 
-### 10. Auto deploy (cron, every 5 minutes)
+### 10. Auto deploy over SSH
 
-**Why:** so a green build goes live without clicking the two buttons. The server asks GitHub
-"is there a new build?" every 5 minutes; nothing on the server has to accept connections from
-outside, and no keys go into GitHub.
+**Why:** so a green build goes live without clicking the two cPanel buttons. After publishing the
+build, the GitHub Action logs in to the server over SSH with a key made only for this, runs
+`.github/deploy/auto-deploy.sh` there, then checks `/up`. Password logins over SSH are refused by
+this host; key logins work.
 
-**a. Get the script onto the server.** It arrives with the first build after this change: push,
-wait for the green build, then deploy once by hand (**Update from Remote** → **Deploy HEAD Commit**).
-Check it's there:
+**a. Make a key just for GitHub** (on your PC, PowerShell; no passphrase, because GitHub uses it
+unattended):
 
-```bash
-ls ~/biponon/.github/deploy/auto-deploy.sh
+```powershell
+ssh-keygen -t ed25519 -f "$HOME\.ssh\biponon_deploy" -C "github-deploy-biponon" -N '""'
+Get-Content "$HOME\.ssh\biponon_deploy.pub"
 ```
 
-**b. Try it once by hand** (it prints nothing when there is nothing new; that's success):
+**b. Authorize it on the server.** cPanel → **SSH Access → Manage SSH Keys → Import Key**: name
+`github-deploy`, paste the `ssh-ed25519 …` line into the public key box, **Import**. Back in the
+list: **Manage → Authorize**. Check from your PC:
 
-```bash
-/bin/bash ~/biponon/.github/deploy/auto-deploy.sh; echo "exit code $?"
+```powershell
+ssh -i "$HOME\.ssh\biponon_deploy" myperson@mypersonalwork.com    # a shell prompt = works; type exit
 ```
 
-- `exit code 0` and no other output → working, already up to date.
-- `uapi: command not found` → tell me; we'll switch to running the `.cpanel.yml` steps directly.
+**c. Give it to GitHub.** Repo **Settings → Secrets and variables → Actions → New repository secret**:
 
-**c. Add the job.** cPanel → **Cron Jobs** → **Add New Cron Job**:
-- **Common Settings:** **Once Per Five Minutes (\*/5 \* \* \* \*)**.
-- **Command:**
+| Secret | Value |
+|---|---|
+| `SSH_HOST` | `mypersonalwork.com` |
+| `SSH_USER` | the cPanel username (`myperson`) |
+| `SSH_PRIVATE_KEY` | `Get-Content -Raw "$HOME\.ssh\biponon_deploy" \| Set-Clipboard`, paste all of it |
+| `SSH_KNOWN_HOSTS` | `ssh-keyscan mypersonalwork.com 2>$null \| Set-Clipboard`, paste all lines |
 
-```bash
-/bin/bash /home/myperson/biponon/.github/deploy/auto-deploy.sh >> /home/myperson/auto-deploy.log 2>&1
-```
+`SSH_KNOWN_HOSTS` pins the server's identity: the Action refuses to talk to anything else. If the
+host ever changes the server's key, the deploy fails with "Host key verification failed"; run the
+`ssh-keyscan` line again and update the secret.
 
-The log only gets lines when a deploy happens (or fails), so it stays small.
+The private key file `biponon_deploy` stays on your PC and in that secret only. To revoke it:
+cPanel → Manage SSH Keys → `github-deploy` → **Deauthorize** (or Delete).
 
-**d. Check it after the next push:**
+**d. Check.** GitHub → **Actions → Production build → Run workflow**. The **Deploy to the server**
+step shows the git update and the migrate/optimize output (or "Already on the newest build"), and
+**Check the site is up** must pass.
 
-```bash
-cat ~/auto-deploy.log
-```
-
-Each deploy writes `[date] old → new: commit message` and `Deploy started`. The deploy's own output
-(migrations, optimize) is in cPanel → **Git™ Version Control → biponon → Manage → Pull or Deploy**.
-
-**Pause / resume** (e.g. before a migration you want to watch):
+**Pause / resume** (e.g. before a migration you want to run by hand), in the server Terminal:
 
 ```bash
-touch ~/auto-deploy.off    # pause
-rm ~/auto-deploy.off       # resume
+touch ~/auto-deploy.off    # pause: builds still publish, the deploy step only says "paused"
+rm ~/auto-deploy.off       # resume; then Run workflow (or push) to deploy what was skipped
 ```
 
 ---
@@ -252,15 +256,18 @@ rm ~/auto-deploy.off       # resume
 ## Every update
 
 1. Push to `main` (or merge into it).
-2. Wait for **Production build** to go green in GitHub → Actions (a red build never reaches `production`).
-3. Within 5 minutes the cron job deploys it (see `~/auto-deploy.log`). To deploy right away, or while
-   auto deploy is paused: cPanel → **Git™ Version Control → biponon → Manage → Pull or Deploy**:
-   **Update from Remote**, then **Deploy HEAD Commit**.
+2. Watch **Production build** in GitHub → Actions: tests, build, publish to `production`, deploy,
+   check `/up`. A red build never reaches `production` or the server.
+3. Nothing else to do. If the deploy step failed, fix the cause and click **Run workflow** (it
+   retries the deploy; the server only updates when it is behind).
 
-The deploy runs `migrate --force` and `optimize`. Its log is under the same page.
+To deploy by hand instead (e.g. while paused): cPanel → **Git™ Version Control → biponon → Manage →
+Pull or Deploy**: **Update from Remote**, then **Deploy HEAD Commit** (runs `.cpanel.yml`; its log
+is on the same page). Or in the server Terminal: `bash ~/biponon/.github/deploy/auto-deploy.sh`
+(remove `~/auto-deploy.off` first if paused).
 
-**Rolled back by hand?** Pause auto deploy first (`touch ~/auto-deploy.off`), or the next tick will
-deploy the latest build again.
+**Rolled back by hand?** Pause auto deploy first (`touch ~/auto-deploy.off`), or the next build
+deploys the latest version again.
 
 If `.env` changes later, run `php artisan optimize` again (settings are cached).
 

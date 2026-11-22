@@ -1,6 +1,7 @@
 # Builds the app on every push to main and publishes a ready-to-run copy to the `production`
 # branch: the backend's tracked files plus vendor/ (no dev packages) and public/build. The cPanel
-# server has no composer or npm, so it only pulls that branch (see docs/DEPLOYMENT.md).
+# server has no composer or npm, so it only pulls that branch. Then it deploys that build to the
+# server over SSH and checks the site is up (see docs/DEPLOYMENT.md).
 name: Production build
 
 on:
@@ -89,3 +90,39 @@ jobs:
           fi
           git commit --quiet -m "Build of ${GITHUB_SHA::7}: $(git -C "$GITHUB_WORKSPACE" log -1 --format=%s | cut -c1-150)"
           git push origin production
+
+      # Needs the repo secrets SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS, SSH_HOST, SSH_USER
+      # (docs/DEPLOYMENT.md, step 10). Runs every time: when the server already has the newest
+      # build it only says so, and an earlier failed deploy is retried by the next run (or by
+      # Actions → Production build → Run workflow).
+      - name: Deploy to the server
+        working-directory: .
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Only the server's own key is trusted (no "accept anything" switch).
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+          # Runs this commit's copy of the deploy script on the server.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 \
+            "$SSH_USER@$SSH_HOST" 'bash -s' < .github/deploy/auto-deploy.sh
+
+      - name: Check the site is up
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 15 https://saas-backend.mypersonalwork.com/up > /dev/null; then
+              echo "The site is up."
+              exit 0
+            fi
+            echo "Attempt $attempt failed; trying again in 10 seconds."
+            sleep 10
+          done
+          echo "The site did not answer /up after the deploy. See storage/logs on the server."
+          exit 1
