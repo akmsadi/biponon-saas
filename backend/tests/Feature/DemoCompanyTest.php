@@ -5,17 +5,27 @@ namespace Tests\Feature;
 use App\Actions\Demo\BuildDemoCompany;
 use App\Models\Organization;
 use App\Models\PlatformSetting;
+use App\Models\ProductImage;
 use App\Models\PurchaseOrder;
 use App\Models\SalesOrder;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DemoCompanyTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Building the demo copies its product photos onto the public disk.
+        Storage::fake(ProductImage::DISK);
+    }
 
     public function test_the_command_builds_a_demo_company_that_covers_every_order_status(): void
     {
@@ -59,7 +69,7 @@ class DemoCompanyTest extends TestCase
         $this->assertSame(3, User::where('is_demo', true)->whereIn('email', array_column(BuildDemoCompany::ACCOUNTS, 'email'))->count());
     }
 
-    public function test_the_demo_company_shop_is_open_and_lists_every_active_product(): void
+    public function test_the_demo_company_shop_is_open_and_lists_every_active_product_with_a_photo(): void
     {
         $this->artisan('biponon:demo')->assertSuccessful();
 
@@ -67,12 +77,16 @@ class DemoCompanyTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.open', true);
 
-        $names = collect($this->getJson('/api/v1/shops/'.BuildDemoCompany::SLUG.'/products')->assertOk()->json('data'))
-            ->pluck('name');
+        $products = collect($this->getJson('/api/v1/shops/'.BuildDemoCompany::SLUG.'/products')->assertOk()->json('data'));
 
-        $this->assertCount(9, $names);
-        $this->assertContains('Classic Cotton T-Shirt', $names);
-        $this->assertNotContains('Track Joggers', $names);
+        $this->assertCount(9, $products);
+        $this->assertContains('Classic Cotton T-Shirt', $products->pluck('name'));
+        $this->assertNotContains('Track Joggers', $products->pluck('name'));
+        $this->assertNotContains(null, $products->pluck('image'));
+
+        $images = BuildDemoCompany::organization()->products()->with('images')->get()->flatMap->images;
+        $this->assertCount(9, $images);
+        Storage::disk(ProductImage::DISK)->assertExists($images->pluck('path')->all());
     }
 
     public function test_the_login_page_offers_the_demo_accounts_only_in_demo_mode(): void
