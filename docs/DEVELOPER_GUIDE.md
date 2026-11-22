@@ -170,7 +170,7 @@ After each successful backup, `QueueBackupUploadToDropbox` queues `UploadBackupT
 | `DROPBOX_CLIENT_ID`, `DROPBOX_CLIENT_SECRET`, `DROPBOX_REFRESH_TOKEN` | Dropbox app; empty = uploads skipped |
 | `DROPBOX_BACKUP_FOLDER` | Dropbox folder, default `/saas_database` |
 | `DROPBOX_KEEP_BACKUPS` | Zips kept in that folder, default 7; `0` keeps all |
-| `MAIL_*` | SMTP for invitations, from a cPanel mailbox (set up 2026-11-17; some mail still lands in spam). Admins can also copy the invitation link from the dialog |
+| `MAIL_MAILER`, `RESEND_API_KEY`, `MAIL_FROM_ADDRESS` | `resend` + a Resend API key; the sender's domain must be verified in Resend. The server IP is on a spam blocklist, so cPanel SMTP is not used. Test with `php artisan biponon:test-mail you@example.com` |
 
 ## Demo mode, landing page and access requests
 

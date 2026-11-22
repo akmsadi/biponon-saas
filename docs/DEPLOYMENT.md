@@ -296,10 +296,30 @@ cd backend && php artisan optimize
 
 ## Email
 
-Until a mail provider is set, `MAIL_MAILER=log` writes emails to `storage/logs` and invitations are
-shared by copying the link. To send real mail, create `no-reply@mypersonalwork.com` in cPanel →
-**Email Accounts**, put its SMTP settings into `.env` (see the comments there), then
-`php artisan optimize`.
+Mail (invitations, password resets, backup alerts) goes out through **Resend** over HTTPS. Sending
+straight from cPanel landed in spam: the shared server's IP (151.158.44.99) is on the Barracuda
+blocklist, which no cPanel setting can fix. Resend sends from its own servers, signed for our domain.
+Free plan: 3,000 emails a month, 100 a day.
+
+**Setup (once):**
+1. resend.com → **Domains → Add domain** `mypersonalwork.com`. Add the records it lists in cPanel →
+   **Zone Editor** (a DKIM TXT `resend._domainkey`, plus an MX and a TXT on `send`). They don't touch
+   the cPanel mailboxes. Wait for **Verified**.
+2. resend.com → **API Keys → Create** (permission "Sending access", this domain only).
+3. Server `backend/.env`:
+
+   ```
+   MAIL_MAILER=resend
+   RESEND_API_KEY=re_...
+   MAIL_FROM_ADDRESS="no-reply@mypersonalwork.com"
+   ```
+
+   Then `php artisan optimize`.
+4. Test: `php artisan biponon:test-mail you@gmail.com`. It prints the mailer and sender, sends right
+   away (not queued) and shows Resend's error if it fails. Check the inbox, not just the spam folder.
+
+Sent mail, bounces and spam complaints are listed in Resend → **Emails**. `MAIL_MAILER=log` writes
+emails to `storage/logs` instead (invitation links can always be copied from the dialog).
 
 ## When something breaks
 
