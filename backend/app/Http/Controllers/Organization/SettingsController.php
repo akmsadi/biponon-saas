@@ -87,13 +87,12 @@ class SettingsController extends Controller
     public function editShop(Request $request): Response
     {
         $organization = $this->organization($request);
-        $shopUrl = config('app.shop_url');
 
         return Inertia::render('organization/settings/shop', [
             'settings' => [
                 'shop_enabled' => (bool) $organization->setting('shop_enabled'),
             ],
-            'shopLink' => $shopUrl ? rtrim($shopUrl, '/').'/'.$organization->slug : null,
+            'shopLink' => $organization->shopLink(),
             'hasDefaultWarehouse' => $organization->defaultWarehouseId() !== null,
             'productsInShop' => $organization->products()->where('show_in_shop', true)->where('is_active', true)->count(),
         ]);

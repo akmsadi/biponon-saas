@@ -195,6 +195,44 @@ class SettingsTest extends TestCase
                 ->where('productsInShop', 2));
     }
 
+    public function test_organization_pages_link_to_the_shop_only_while_it_is_open(): void
+    {
+        config(['app.shop_url' => 'https://shop.example.test']);
+        $member = User::factory()->withOrganization($this->organization, 'member')->create();
+        $warehouse = Warehouse::factory()->for($this->organization)->create();
+
+        // Closed: never switched on.
+        $this->actingAs($member)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationShopLink', null));
+
+        $this->organization->putSettings(['shop_enabled' => true, 'default_warehouse_id' => $warehouse->id]);
+        $this->organization->save();
+
+        $this->actingAs($member->fresh())
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationShopLink', 'https://shop.example.test/acme'));
+
+        // Closed again once the warehouse web orders ship from is deactivated.
+        $warehouse->update(['is_active' => false]);
+
+        $this->actingAs($member->fresh())
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationShopLink', null));
+    }
+
+    public function test_no_shop_link_without_a_shop_address(): void
+    {
+        config(['app.shop_url' => null]);
+        $warehouse = Warehouse::factory()->for($this->organization)->create();
+        $this->organization->putSettings(['shop_enabled' => true, 'default_warehouse_id' => $warehouse->id]);
+        $this->organization->save();
+
+        $this->actingAs($this->admin)
+            ->get(route('dashboard'))
+            ->assertInertia(fn (Assert $page) => $page->where('organizationShopLink', null));
+    }
+
     public function test_the_default_warehouse_must_be_an_active_warehouse_of_this_organization(): void
     {
         $inactive = Warehouse::factory()->for($this->organization)->create(['is_active' => false]);
